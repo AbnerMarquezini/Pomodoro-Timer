@@ -105,6 +105,11 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 </head>
 <body>
 <div class="acct" id="acct" hidden></div>
+<dialog id="upd"><div class="dl">
+  <h2 id="upd-t">Nova versão disponível</h2>
+  <ul id="upd-n" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px"></ul>
+  <div class="row"><button class="btn main" id="upd-go">Atualizar agora</button><button class="btn" id="upd-later">Depois</button></div>
+</div></dialog>
 <dialog id="dlg"><div class="dl"><h2>Entrar para sincronizar</h2>
   <label>E-mail<input type="email" id="em" autocomplete="username"></label>
   <label>Senha<input type="password" id="pw" autocomplete="current-password"></label>
@@ -370,7 +375,49 @@ document.addEventListener('change',async e=>{const i=e.target;
 document.addEventListener('visibilitychange',tick);
 setInterval(tick,1000);
 prepMan();paintAll();tick();
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker' in navigator){
+  let waitingWorker=null,notesReady=null,offered=false;
+  const updBusy=()=>S.t.running||S.c.running;
+
+  async function fetchChangelog(){
+    try{const r=await fetch('changelog.json',{cache:'no-store'});if(r.ok)return await r.json()}catch(e){}
+    return null;
+  }
+  function paintChangelog(d){
+    $('#upd-t').textContent=(d&&d.title)||'Nova versão disponível';
+    $('#upd-n').innerHTML=(d&&Array.isArray(d.notes)&&d.notes.length?d.notes:['Melhorias e correções.'])
+      .map(t=>`<li>${String(t).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))}</li>`).join('');
+  }
+  async function offerUpdate(){
+    if(!waitingWorker||updBusy())return;
+    if(!notesReady)notesReady=await fetchChangelog();
+    paintChangelog(notesReady);
+    if(!$('#upd').open)$('#upd').showModal();
+  }
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(offered)return;offered=true;location.reload();
+  });
+  $('#upd-go').onclick=()=>{if(waitingWorker)waitingWorker.postMessage('SKIP_WAITING')};
+  $('#upd-later').onclick=()=>$('#upd').close();
+
+  navigator.serviceWorker.register('sw.js').then(reg=>{
+    if(reg.waiting&&navigator.serviceWorker.controller){waitingWorker=reg.waiting;offerUpdate()}
+    reg.addEventListener('updatefound',()=>{
+      const nw=reg.installing;if(!nw)return;
+      nw.addEventListener('statechange',()=>{
+        if(nw.state==='installed'&&navigator.serviceWorker.controller){waitingWorker=nw;offerUpdate()}
+      });
+    });
+    setInterval(()=>reg.update(),30*60*1000);
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){reg.update();offerUpdate()}});
+  }).catch(()=>{});
+
+  // Momentos seguros para oferecer a atualização: ao terminar um período do
+  // pomodoro, ao encerrar manualmente, ou ao finalizar o cronômetro.
+  ['complete','stopAll','cStop'].forEach(fn=>{
+    const orig=window[fn];if(typeof orig==='function')window[fn]=function(...a){const r=orig.apply(this,a);offerUpdate();return r};
+  });
+}
 if(tab==='day'){const g=document.querySelector('.grid');}
 </script>
 <script type="module">
@@ -380,12 +427,10 @@ import{initializeFirestore,getFirestore,persistentLocalCache,persistentMultipleT
 
 // COLE AQUI a configuração do seu projeto Firebase (veja o tutorial, passo 3)
 const firebaseConfig={
-  apiKey:"AIzaSyB03CxYV72846oDTn1ojdUtKdD5rg_fdNM",
-  authDomain:"pomodoro-estudo.firebaseapp.com",
-  projectId:"pomodoro-estudo",
-  storageBucket: "pomodoro-estudo.firebasestorage.app",
-  messagingSenderId: "548194224585",
-  appId: "1:548194224585:web:30f2157ef6af0422a68018"
+  apiKey:"COLE_AQUI",
+  authDomain:"SEU-PROJETO.firebaseapp.com",
+  projectId:"SEU-PROJETO",
+  appId:"COLE_AQUI"
 };
 
 if(firebaseConfig.apiKey==='COLE_AQUI'){setAcct({mode:'off'})}

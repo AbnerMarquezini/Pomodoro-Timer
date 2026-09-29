@@ -1,0 +1,8 @@
+{
+  "version": "2",
+  "title": "Novidades desta atualização",
+  "notes": [
+    "Descreva aqui, em frases curtas, o que mudou nesta versão.",
+    "Cada linha desta lista vira um item no pop-up que o usuário vê."
+  ]
+}
