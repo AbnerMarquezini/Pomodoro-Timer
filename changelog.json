@@ -1,8 +1,8 @@
 {
   "version": "2",
-  "title": "Novidades desta atualização",
+  "title": "Funcionalidade implementadas:",
   "notes": [
-    "Descreva aqui, em frases curtas, o que mudou nesta versão.",
-    "Cada linha desta lista vira um item no pop-up que o usuário vê."
+    "Seletor de matérias - Agora você pode adicionar as matérias que possui para um melhor registro. Este controle também é alterado na aba de relatório semanal.",
+    "Caso possua alguma sugestão de funcionalidade ou correção de bugs, favor reportaro ao desenvolvedor, por meio do email marqueziniabner@gmail.com"
   ]
 }
