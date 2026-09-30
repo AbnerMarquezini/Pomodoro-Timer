@@ -121,6 +121,8 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 .legend{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:12px;font-size:12px;color:var(--mute)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.acctbox{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.acctbox .nm{flex:1;min-width:180px}.acctbox small{color:var(--mute);display:block;margin-top:2px}
 @media(prefers-reduced-motion:reduce){.bar i{transition:none}}
 </style>
 <link rel="manifest" href="manifest.json">
@@ -219,7 +221,7 @@ function applySubjects(a){S.subjects=a;save();renderView()}
 function migSubjKey(){return S.migSubj}
 function setMigSubj(v){S.migSubj=v;save()}
 function clearLocal(){S.sessions=[];S.mig=null;S.subjects=[];S.migSubj=null;S.selSubj='';save();paintAll()}
-function paintAcct(){const el=$('#acct');
+function paintAcct(){const el=$('#acct');if(typeof tab!=='undefined'&&tab==='set'&&typeof renderView==='function')renderView();
   if(acct.mode==='off'){el.hidden=true;return}
   el.hidden=false;const em=String(acct.email||'').replace(/[<>&"]/g,'');
   el.innerHTML=acct.mode==='in'?`<span>${em} · ${acct.err?'erro de sincronização':acct.pending?'sincronizando…':acct.fromCache?'offline':'sincronizado'}</span><button class="btn" data-logout>Sair</button>`:`<span>Sem conta: os registros ficam só neste aparelho.</span><button class="btn" data-login>Entrar para sincronizar</button>`}
@@ -392,7 +394,10 @@ function paintSubjSel(){const sel=$('#subjsel');if(!sel)return;const busy=S.t.ru
   sel.disabled=busy}
 function vSet(){const c=S.cfg;
   const row=(k,t)=>`<div class="snd"><div class="nm"><b>${t}</b><small>${SND[k]?SND[k].name:'Som padrão'}</small></div><label class="btn">Escolher .mp3<input type="file" accept=".mp3,audio/mpeg" data-snd="${k}"></label><button class="btn" data-play="${k}">Testar</button>${SND[k]?`<button class="btn" data-rm="${k}">Remover</button>`:''}</div>`;
-  return `<div class="nav"><h2>Configurações</h2></div><h3 class="sec">Avisos</h3>
+  const acctSec=acct.mode==='in'
+    ?`<div class="acctbox"><div class="nm"><b>${String(acct.email||'').replace(/[<>&"]/g,'')}</b><small>${acct.err?'Erro de sincronização':acct.pending?'Sincronizando…':acct.fromCache?'Offline — sincroniza ao reconectar':'Sincronizado'}</small></div><button class="btn" data-switch>Trocar de conta</button><button class="btn" data-logout>Sair</button></div>`
+    :`<div class="acctbox"><div class="nm"><b>Sem conta</b><small>Os registros ficam só neste aparelho.</small></div><button class="btn main" data-login>Entrar para sincronizar</button></div>`;
+  return `<div class="nav"><h2>Configurações</h2></div><h3 class="sec">Conta</h3>${acctSec}<h3 class="sec">Avisos</h3>
   <label class="opt"><input type="checkbox" id="o-snd" ${c.snd?'checked':''}>Tocar som quando o período mudar</label>
   <div class="opt"><label for="o-vol">Volume</label><input type="range" id="o-vol" min="0" max="100" value="${c.vol}"><span id="volv">${c.vol}%</span></div>
   <label class="opt"><input type="checkbox" id="o-ntf" ${c.ntf?'checked':''}>Mostrar notificação do navegador</label>
@@ -593,11 +598,13 @@ else{
   const run=async f=>{er.textContent='';try{await f()}catch(e){er.textContent=msg(e)}};
   d('btn-in').onclick=()=>run(()=>signInWithEmailAndPassword(auth,d('em').value,d('pw').value));
   d('btn-new').onclick=()=>run(()=>createUserWithEmailAndPassword(auth,d('em').value,d('pw').value));
-  d('btn-g').onclick=()=>run(()=>signInWithPopup(auth,new GoogleAuthProvider()));
+  function googleProvider(){const p=new GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});return p}
+  d('btn-g').onclick=()=>run(()=>signInWithPopup(auth,googleProvider()));
   d('btn-x').onclick=()=>dlg.close();
   document.addEventListener('click',async e=>{
     if(e.target.closest('[data-login]')){er.textContent='';dlg.showModal()}
     if(e.target.closest('[data-logout]')){await signOut(auth);clearLocal()}
+    if(e.target.closest('[data-switch]')){await signOut(auth);clearLocal();er.textContent='';dlg.showModal()}
   });
 }
 </script>
