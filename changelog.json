@@ -1,8 +1,10 @@
 {
-  "version": "3",
+  "version": "6",
   "title": "Novidades desta atualização",
   "notes": [
-    "Descreva aqui, em frases curtas, o que mudou nesta versão.",
-    "Cada linha desta lista vira um item no pop-up que o usuário vê."
+    "Agora você pode cadastrar suas matérias de estudo para ter um registro mais personalizado e fiel à realidade.",
+    "As matérias cadastradas devem sincronizar entre os seus aparelhos.",
+    "Faça login no mesmo e-mail no computador e no celular para ver as mesmas matérias e cores nos dois.",
+    "Caso note instabilidades, erros ou possua sugestões de melhoria, favor entrar em contato com o desenvolvedor por meio do email: contatomarqueziniabner@gmail.com"
   ]
 }

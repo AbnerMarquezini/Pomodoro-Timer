@@ -44,8 +44,9 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--amber);outline-
 .grid{position:relative;height:864px;margin-left:52px;border-left:1px solid var(--line)}
 .hr{position:absolute;left:0;right:0;border-top:1px solid var(--line)}
 .hr span{position:absolute;left:-52px;top:-9px;width:44px;text-align:right;font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
-.blk{position:absolute;left:4px;right:6px;background:var(--blue);color:var(--blue-t);border-radius:6px;padding:4px 8px;font-size:12px;overflow:hidden;border:1px solid rgba(255,255,255,.12)}
-.blk b{display:block;font-size:12px}
+.blk{position:absolute;left:4px;right:6px;min-height:16px;background:var(--blue);color:var(--blue-t);border-radius:6px;padding:2px 8px;font-size:12px;line-height:1.35;white-space:nowrap;overflow:visible;text-overflow:ellipsis;border:1px solid rgba(255,255,255,.12);z-index:1}
+.blk b{display:inline;font-size:12px}
+.blk:hover,.blk:focus{z-index:3}
 .blk.live{outline:2px dashed var(--amber);outline-offset:-2px}
 .now{position:absolute;left:-5px;right:0;height:2px;background:#ef5b5b;z-index:2}
 .now:before{content:"";position:absolute;left:0;top:-4px;width:10px;height:10px;border-radius:50%;background:#ef5b5b}
@@ -53,8 +54,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--amber);outline-
 .sum b{color:var(--ink)}
 .wk{display:grid;grid-template-columns:48px 1fr 64px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
 .wk:last-of-type{border-bottom:0}
-.wk .t{height:22px;background:var(--bg);border-radius:5px;overflow:hidden}
-.wk .t i{display:block;height:100%;background:var(--blue);border-radius:5px}
+.wk .t{height:22px;background:var(--bg);border-radius:5px;overflow:hidden;display:flex}
+.wk .t i{display:block;height:100%;background:var(--blue);flex:none}
 .wk.hoje .n{color:var(--amber);font-weight:700}
 .wk .v{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
@@ -97,6 +98,29 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 .dl{display:flex;flex-direction:column;gap:10px}.dl h2{margin:0;font-size:18px}
 .dl label{display:flex;flex-direction:column;font-size:12px;color:var(--mute);gap:3px}
 .dl input{font:inherit;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.subjsel{margin-bottom:12px;text-align:left}
+.subjsel label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
+.subjsel select{font:inherit;width:100%;padding:8px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.subjsel select:disabled{opacity:.6}
+.sec{margin:28px 0 8px;padding-top:16px;border-top:1px solid var(--line);font-size:16px}
+.nav+.sec{margin-top:4px;padding-top:0;border-top:0}
+.sub{margin:14px 0 4px;font-size:13px;color:var(--mute);font-weight:600}
+.sf{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px}
+@media(max-width:560px){.sf{grid-template-columns:1fr}}
+.sf label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--mute)}
+.sf input:not([type=color]){font:inherit;width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.sf .full{grid-column:1/-1}.cl{display:block;font-size:12px;color:var(--mute);margin-bottom:6px}
+.sws{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sw{width:28px;height:28px;border-radius:50%;border:2px solid transparent;padding:0;box-shadow:inset 0 0 0 2px var(--card)}
+.sw[aria-pressed="true"]{border-color:var(--ink)}
+.sws input[type=color]{width:36px;height:30px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;cursor:pointer}
+.crgb{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:8px;margin-top:10px}
+.sl{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.dot{width:14px;height:14px;border-radius:50%;flex:none}
+.sl .nm{flex:1;min-width:0}.sl small{color:var(--mute);display:block}
+.legend{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:12px;font-size:12px;color:var(--mute)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
 @media(prefers-reduced-motion:reduce){.bar i{transition:none}}
 </style>
 <link rel="manifest" href="manifest.json">
@@ -120,6 +144,7 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 </div></dialog>
 <div class="app">
   <aside class="card timer">
+    <div class="subjsel"><label for="subjsel">Matéria</label><select id="subjsel"></select></div>
     <div class="row modes"><button class="btn seg" data-ui="pomo">Pomodoro</button><button class="btn seg" data-ui="cron">Cronômetro</button><button class="btn seg" data-ui="man" title="Adicionar registro manual">Manual</button></div>
     <div id="tmr">
     <p class="mode" id="mode">Foco</p>
@@ -152,7 +177,7 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
       <button class="tab" role="tab" data-tab="week">Semana</button>
       <button class="tab" role="tab" data-tab="month">Relatório</button>
       <button class="tab" role="tab" data-tab="hist">Histórico</button>
-      <button class="tab" role="tab" data-tab="set">Avisos</button>
+      <button class="tab" role="tab" data-tab="set">Configurações</button>
     </div>
     <section class="card" id="view"></section>
   </main>
@@ -160,9 +185,9 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 <div id="tip" role="tooltip" hidden></div>
 <script>
 const K='pomodoro-estudo.v1';
-let S={sessions:[],cfg:{focus:25,brk:5},t:null,c:{acc:0,running:false},ui:'pomo'};
+let S={sessions:[],cfg:{focus:25,brk:5},t:null,c:{acc:0,running:false},ui:'pomo',subjects:[],selSubj:'',mig:null,migSubj:null};
 try{const r=localStorage.getItem(K);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
-S.cfg=Object.assign({focus:25,brk:5,auto:false,snd:true,ntf:false,vol:80},S.cfg);S.c=S.c||{acc:0,running:false};S.ui=S.ui||'pomo';
+S.cfg=Object.assign({focus:25,brk:5,auto:false,snd:true,ntf:false,vol:80},S.cfg);S.c=S.c||{acc:0,running:false};S.ui=S.ui||'pomo';S.subjects=S.subjects||[];S.selSubj=S.selSubj||'';
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
 const dur=m=>(m==='focus'?S.cfg.focus:S.cfg.brk)*60000;
 if(!S.t)S.t={mode:'focus',rem:dur('focus'),running:false};
@@ -186,14 +211,21 @@ function applySessions(a){S.sessions=a;save();paintAll()}
 function applyCfg(d){for(const k of['focus','brk','auto','snd','vol'])if(d[k]!==undefined)S.cfg[k]=d[k];save();$('#cf').value=S.cfg.focus;$('#cb').value=S.cfg.brk;if(!S.t.running)S.t.rem=dur(S.t.mode);paintAll()}
 function migKey(){return S.mig}
 function setMig(v){S.mig=v;save()}
-function clearLocal(){S.sessions=[];S.mig=null;save();paintAll()}
+function addSubj(o){S.subjects.push(o);save();if(cloud)cloud.subjSet(o)}
+function updSubj(o){save();if(cloud)cloud.subjSet(o)}
+function delSubj(id){S.subjects=S.subjects.filter(x=>x.id!==id);save();if(cloud)cloud.subjDel(id)}
+function localSubjects(){return S.subjects}
+function applySubjects(a){S.subjects=a;save();renderView()}
+function migSubjKey(){return S.migSubj}
+function setMigSubj(v){S.migSubj=v;save()}
+function clearLocal(){S.sessions=[];S.mig=null;S.subjects=[];S.migSubj=null;S.selSubj='';save();paintAll()}
 function paintAcct(){const el=$('#acct');
   if(acct.mode==='off'){el.hidden=true;return}
   el.hidden=false;const em=String(acct.email||'').replace(/[<>&"]/g,'');
   el.innerHTML=acct.mode==='in'?`<span>${em} · ${acct.err?'erro de sincronização':acct.pending?'sincronizando…':acct.fromCache?'offline':'sincronizado'}</span><button class="btn" data-logout>Sair</button>`:`<span>Sem conta: os registros ficam só neste aparelho.</span><button class="btn" data-login>Entrar para sincronizar</button>`}
 const allowed=u=>u==='man'||(S.c.running?u==='cron':S.t.running?u==='pomo':true);
 function prepMan(){const d=$('#m-d');d.value=dk(A);d.max=dk(Date.now());$('#m-err').textContent=''}
-function log(s,e,k='pomo'){if(e-s>=30000){addSess({id:s+'-'+Math.round(Math.random()*1e5),s,e,k})}}
+function log(s,e,k='pomo'){if(e-s>=30000){addSess({id:s+'-'+Math.round(Math.random()*1e5),s,e,k,sub:S.selSubj||null})}}
 const SND={};let sndMsg='',ntfMsg='',flash='';
 function setSnd(k,f,name){if(SND[k])URL.revokeObjectURL(SND[k].url);SND[k]={url:URL.createObjectURL(f),name}}
 const idb=()=>new Promise((ok,no)=>{const r=indexedDB.open('pomodoro-sons',1);r.onupgradeneeded=()=>r.result.createObjectStore('s');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)});
@@ -229,13 +261,13 @@ function addManual(){const d=$('#m-d').value,a=$('#m-s').value,b=$('#m-e').value
   if(e<=s)return err('O fim precisa ser depois do início (registros não atravessam a meia-noite).');
   if(e>Date.now())return err('O registro não pode estar no futuro.');
   if(S.sessions.some(x=>s<x.e&&e>x.s))return err('Esse horário se sobrepõe a outro registro.');
-  addSess({id:'m'+s+'-'+Math.round(Math.random()*1e5),s,e,k:'man'});
+  addSess({id:'m'+s+'-'+Math.round(Math.random()*1e5),s,e,k:'man',sub:S.selSubj||null});
   save();A=new Date(y,mo-1,da);paintAll();$('#m-s').value=$('#m-e').value='';er.className='er ok';er.textContent='Registro de '+fmt((e-s)/6e4)+' adicionado.'}
 
 function segs(){const out=[];
-  const add=(s,e,k)=>{while(s<e){const d=new Date(s),n=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1).getTime(),x=Math.min(e,n);out.push({s,e:x,day:dk(s),k});s=x}};
-  S.sessions.forEach(x=>add(x.s,x.e,x.k));
-  const t=S.t;if(t.running&&t.mode==='focus')add(t.segStart,Date.now(),'pomo');if(S.c.running)add(S.c.segStart,Date.now(),'cron');
+  const add=(s,e,k,sub)=>{while(s<e){const d=new Date(s),n=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1).getTime(),x=Math.min(e,n);out.push({s,e:x,day:dk(s),k,sub});s=x}};
+  S.sessions.forEach(x=>add(x.s,x.e,x.k,x.sub));
+  const t=S.t;if(t.running&&t.mode==='focus')add(t.segStart,Date.now(),'pomo',S.selSubj||null);if(S.c.running)add(S.c.segStart,Date.now(),'cron',S.selSubj||null);
   return out}
 const mins=l=>l.reduce((a,x)=>a+(x.e-x.s)/6e4,0);
 function byDay(l){const o={};l.forEach(x=>o[x.day]=(o[x.day]||0)+(x.e-x.s)/6e4);return o}
@@ -261,6 +293,7 @@ function paintTimer(){const t=S.t,cr=S.ui==='cron'||(S.ui==='man'&&S.c.running),
   $('#clock').textContent=txt;$('#clock').className='clock'+(cr?' cr':'');
   $('#bar').hidden=$('.cfg').hidden=cr;$('#tmr').hidden=S.ui==='man';$('#man').hidden=S.ui!=='man';
   document.querySelectorAll('.seg').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.ui===S.ui);b.disabled=!allowed(b.dataset.ui)});
+  paintSubjSel();
   document.title=(cr?S.c.running:t.running)?txt+' · '+ttl:'Pomodoro de estudo';
   const k=dk(now);$('#tday').textContent=fmt(mins(segs().filter(x=>x.day===k)));
   $('#cf').disabled=$('#cb').disabled=t.running}
@@ -271,7 +304,8 @@ function vDay(){const key=dk(A),H=48,base=new Date(A.getFullYear(),A.getMonth(),
   const live=S.t.running&&S.t.mode==='focus'?S.t.segStart:S.c.running?S.c.segStart:-1;
   l.forEach(x=>{const top=Math.max(0,(x.s-base)/36e5*H),bot=Math.min(18*H,(x.e-base)/36e5*H);if(bot<=top)return;
     const m=(x.e-x.s)/6e4;
-    g+=`<div class="blk${x.s===live||(live>0&&x.e>Date.now()-2000)?' live':''}" style="top:${top}px;height:${Math.max(6,bot-top-1)}px" tabindex="0" data-k="${KL[x.k]||'Foco'}" data-a="${hm(x.s)}" data-b="${hm(x.e)}" data-d="${fmt(m)}"><b>${KL[x.k]||'Foco'}</b>${hm(x.s)} – ${hm(x.e)} · ${fmt(m)}</div>`});
+    const sj=x.sub?S.subjects.find(y=>y.id===x.sub):null,bg=sj?sj.color:'',fg=bg?contrastColor(bg):'',lbl=sj?(sj.name+(sj.area?' · '+sj.area:'')):KL[x.k]||'Foco';
+    g+=`<div class="blk${x.s===live||(live>0&&x.e>Date.now()-2000)?' live':''}" style="top:${top}px;height:${Math.max(6,bot-top-1)}px${bg?`;background:${bg};color:${fg}`:''}" tabindex="0" data-k="${KL[x.k]||'Foco'}" data-a="${hm(x.s)}" data-b="${hm(x.e)}" data-d="${fmt(m)}" data-sn="${sj?esc(sj.name):''}" data-sa="${sj&&sj.area?esc(sj.area):''}"><b>${lbl}</b> ${hm(x.s)} – ${hm(x.e)} · ${fmt(m)}</div>`});
   if(key===dk(Date.now())){const y=(Date.now()-base)/36e5*H;if(y>=0&&y<=18*H)g+=`<div class="now" style="top:${y}px"></div>`}
   return `<div class="nav"><h2>${A.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})}</h2>${nav()}</div>
   <div class="grid">${g}</div>
@@ -280,12 +314,19 @@ function vDay(){const key=dk(A),H=48,base=new Date(A.getFullYear(),A.getMonth(),
 function nav(){return `<button class="btn" data-act="-1" aria-label="Anterior">‹</button><button class="btn" data-act="0">Hoje</button><button class="btn" data-act="1" aria-label="Próximo">›</button>`}
 
 function vWeek(){const wd=(A.getDay()+6)%7,st=new Date(A.getFullYear(),A.getMonth(),A.getDate()-wd);
-  const o=byDay(segs()),N=['seg','ter','qua','qui','sex','sáb','dom'],days=[];
-  for(let i=0;i<7;i++){const d=new Date(st.getFullYear(),st.getMonth(),st.getDate()+i);days.push({d,k:dk(d.getTime()),m:o[dk(d.getTime())]||0,n:N[i]})}
+  const l=segs(),o=byDay(l),N=['seg','ter','qua','qui','sex','sáb','dom'],days=[];
+  const bySub={};l.forEach(x=>{const k=x.sub||'_';(bySub[x.day]=bySub[x.day]||{})[k]=(bySub[x.day][k]||0)+(x.e-x.s)/6e4});
+  const order=S.subjects.map(x=>x.id).concat('_');
+  for(let i=0;i<7;i++){const d=new Date(st.getFullYear(),st.getMonth(),st.getDate()+i);const k=dk(d.getTime());days.push({d,k,m:o[k]||0,n:N[i],parts:bySub[k]||{}})}
   const mx=Math.max(60,...days.map(x=>x.m)),tot=days.reduce((a,x)=>a+x.m,0),end=days[6].d;
+  const bar=x=>order.filter(id=>x.parts[id]>0).map(id=>{const sj=id==='_'?null:S.subjects.find(y=>y.id===id),min=x.parts[id],
+      lbl=sj?sj.name+(sj.area?' · '+sj.area:''):'Sem matéria',bg=sj?sj.color:'var(--blue)',
+      dayLbl=cap(x.d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'short'}));
+    return `<i class="seg2" tabindex="0" style="width:${100*min/mx}%;background:${bg}" data-sn="${esc(lbl)}" data-day="${esc(dayLbl)}" data-d="${fmt(min)}"></i>`}).join('');
+  const legend=S.subjects.length?`<div class="legend"><span><i style="background:var(--blue)"></i>Sem matéria</span>${S.subjects.map(x=>`<span><i style="background:${x.color}"></i>${esc(x.name)}</span>`).join('')}</div>`:'';
   return `<div class="nav"><h2>${st.toLocaleDateString('pt-BR',{day:'numeric',month:'short'})} – ${end.toLocaleDateString('pt-BR',{day:'numeric',month:'short'})}</h2>${nav()}</div>
-  ${days.map(x=>`<div class="wk${x.k===dk(Date.now())?' hoje':''}"><span class="n">${x.n}</span><div class="t"><i style="width:${100*x.m/mx}%"></i></div><span class="v">${x.m?fmt(x.m):'—'}</span></div>`).join('')}
-  <p class="sum">Total da semana: <b>${fmt(tot)}</b> · média por dia: <b>${fmt(tot/7)}</b></p>`}
+  ${days.map(x=>`<div class="wk${x.k===dk(Date.now())?' hoje':''}"><span class="n">${x.n}</span><div class="t">${x.m?bar(x):''}</div><span class="v">${x.m?fmt(x.m):'—'}</span></div>`).join('')}
+  <p class="sum">Total da semana: <b>${fmt(tot)}</b> · média por dia: <b>${fmt(tot/7)}</b></p>${legend}`}
 
 const PN={manha:'Manhã',tarde:'Tarde',noite:'Noite'},PR={manha:'06h–12h',tarde:'12h–18h',noite:'18h–06h'};
 function vMonth(){const y=A.getFullYear(),m=A.getMonth(),ym=y+'-'+pad(m+1),nd=new Date(y,m+1,0).getDate();
@@ -313,16 +354,52 @@ function vHist(){const L=S.sessions.slice().sort((a,b)=>b.s-a.s),f=flash;flash='
     h+=`<div class="hi"><span>${hm(x.s)} – ${hm(x.e)}<em>${KL[x.k]||'Foco'}</em></span><b>${fmt((x.e-x.s)/6e4)}</b><button class="x" data-del="${x.id}" aria-label="Excluir registro">Excluir</button></div>`});
   return `<div class="nav"><h2>Histórico</h2></div>`+(L.length?h+`<p class="sum">Total registrado: <b>${fmt(S.sessions.reduce((a,x)=>a+(x.e-x.s)/6e4,0))}</b> em ${L.length} sessões</p>`:`<p class="empty">O histórico está vazio. Cada foco, cronômetro ou registro manual fica salvo aqui.</p>`)}
 
+S.subjects=S.subjects||[];
+const PAL=['#2f5d84','#3f8a68','#b57a10','#c0503f','#7a5aa6','#c2699b','#2f8f9d','#6b7280'];
+const newDraft=()=>({id:null,name:'',area:'',color:PAL[0]});
+let draft=newDraft(),sMsg='';
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const hex2=c=>[1,3,5].map(i=>parseInt(c.slice(i,i+2),16));
+const toHex=(r,g,b)=>'#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+function contrastColor(hex){const h=hex.replace('#','');if(h.length!==6)return'#fff';
+  const lin=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};
+  const [r,g,b]=[0,2,4].map(i=>lin(parseInt(h.slice(i,i+2),16)));
+  const L=.2126*r+.7152*g+.0722*b;
+  return L>0.42?'#12181f':'#ffffff'}
+function setCol(c,skip){draft.color=c;const[r,g,b]=hex2(c),set=(id,v)=>{const i=$('#'+id);if(i&&id!==skip)i.value=v};
+  set('s-col',c);set('s-hex',c.toUpperCase());set('s-r',r);set('s-g',g);set('s-b',b);
+  document.querySelectorAll('.sw').forEach(x=>x.setAttribute('aria-pressed',x.dataset.sw===c))}
+function saveSubj(){const name=draft.name.trim(),area=draft.area.trim();
+  if(!name){sMsg='Informe o nome da matéria.';renderView();return}
+  if(S.subjects.some(x=>x.id!==draft.id&&x.name.toLowerCase()===name.toLowerCase())){sMsg='Já existe uma matéria com esse nome.';renderView();return}
+  if(draft.id){const x=S.subjects.find(y=>y.id===draft.id);if(x){Object.assign(x,{name,area,color:draft.color});updSubj(x)}}
+  else addSubj({id:'s'+Date.now().toString(36)+Math.round(Math.random()*1e4),name,area,color:draft.color});
+  draft=newDraft();sMsg='';renderView()}
+function subjUI(){const areas=[...new Set(S.subjects.map(x=>x.area).filter(Boolean))],ed=!!draft.id,[r,g,b]=hex2(draft.color);
+  return `<div class="sf">
+  <label>Nome da matéria<input type="text" id="s-name" maxlength="60" value="${esc(draft.name)}" placeholder="Ex.: Direito Penal"></label>
+  <label>Área da matéria<input type="text" id="s-area" maxlength="60" list="s-areas" value="${esc(draft.area)}" placeholder="Ex.: Direito"><datalist id="s-areas">${areas.map(a=>`<option value="${esc(a)}">`).join('')}</datalist></label>
+  <div class="full"><span class="cl">Cor</span><div class="sws">${PAL.map(c=>`<button type="button" class="sw" style="background:${c}" data-sw="${c}" aria-label="Cor ${c}" aria-pressed="${c===draft.color}"></button>`).join('')}<input type="color" id="s-col" value="${draft.color}" aria-label="Cor personalizada"></div>
+  <div class="crgb"><label>Hex<input type="text" id="s-hex" maxlength="7" value="${draft.color.toUpperCase()}"></label><label>R<input type="number" id="s-r" min="0" max="255" value="${r}"></label><label>G<input type="number" id="s-g" min="0" max="255" value="${g}"></label><label>B<input type="number" id="s-b" min="0" max="255" value="${b}"></label></div></div>
+  <div class="full row" style="justify-content:flex-start"><button class="btn main" data-sadd>${ed?'Salvar alterações':'Adicionar matéria'}</button>${ed?'<button class="btn" data-scancel>Cancelar</button>':''}</div>
+  <p class="er full" role="alert">${sMsg}</p></div>`+
+  (S.subjects.length?S.subjects.map(x=>`<div class="sl"><span class="dot" style="background:${x.color}"></span><div class="nm"><b>${esc(x.name)}</b><small>${esc(x.area)||'Sem área'} · ${x.color.toUpperCase()}</small></div><button class="btn" data-sedit="${x.id}">Editar</button><button class="btn" data-sdel="${x.id}">Excluir</button></div>`).join(''):'<p class="empty">Nenhuma matéria cadastrada ainda.</p>')}
+function paintSubjSel(){const sel=$('#subjsel');if(!sel)return;const busy=S.t.running||S.c.running;
+  const opts=['<option value="">Sem matéria</option>'].concat(S.subjects.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`));
+  const key=String(S.subjects.length)+opts.join('');
+  if(sel.dataset.n!==key){sel.innerHTML=opts.join('');sel.dataset.n=key}
+  if(sel.value!==S.selSubj)sel.value=S.selSubj;
+  sel.disabled=busy}
 function vSet(){const c=S.cfg;
   const row=(k,t)=>`<div class="snd"><div class="nm"><b>${t}</b><small>${SND[k]?SND[k].name:'Som padrão'}</small></div><label class="btn">Escolher .mp3<input type="file" accept=".mp3,audio/mpeg" data-snd="${k}"></label><button class="btn" data-play="${k}">Testar</button>${SND[k]?`<button class="btn" data-rm="${k}">Remover</button>`:''}</div>`;
-  return `<div class="nav"><h2>Avisos</h2></div>
+  return `<div class="nav"><h2>Configurações</h2></div><h3 class="sec">Avisos</h3>
   <label class="opt"><input type="checkbox" id="o-snd" ${c.snd?'checked':''}>Tocar som quando o período mudar</label>
   <div class="opt"><label for="o-vol">Volume</label><input type="range" id="o-vol" min="0" max="100" value="${c.vol}"><span id="volv">${c.vol}%</span></div>
   <label class="opt"><input type="checkbox" id="o-ntf" ${c.ntf?'checked':''}>Mostrar notificação do navegador</label>
   <p class="er">${ntfMsg}</p>
   <label class="opt"><input type="checkbox" id="o-auto" ${c.auto?'checked':''}>Iniciar o próximo período automaticamente</label>
-  <h3>Sons</h3>${row('focus','Início do foco')}${row('break','Início da pausa')}
-  <p class="er">${sndMsg}</p><p class="sum">Os arquivos ficam guardados neste navegador (até 10 MB cada). Sem arquivo, toca um bipe padrão.</p>`}
+  <h4 class="sub">Sons</h4>${row('focus','Início do foco')}${row('break','Início da pausa')}
+  <p class="er">${sndMsg}</p><p class="sum">Os arquivos ficam guardados neste navegador (até 10 MB cada). Sem arquivo, toca um bipe padrão.</p><h3 class="sec">Matérias</h3>${subjUI()}`}
 
 function renderView(){$('#view').innerHTML={day:vDay,week:vWeek,month:vMonth,hist:vHist,set:vSet}[tab]();
   document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab))}
@@ -336,6 +413,11 @@ document.addEventListener('click',e=>{
     else if(tab==='week')A=new Date(A.getFullYear(),A.getMonth(),A.getDate()+7*n);
     else A=new Date(A.getFullYear(),A.getMonth()+n,1);
     renderView();return}
+  const sw=e.target.closest('[data-sw]');if(sw){setCol(sw.dataset.sw);return}
+  if(e.target.closest('[data-sadd]')){saveSubj();return}
+  if(e.target.closest('[data-scancel]')){draft=newDraft();sMsg='';renderView();return}
+  const se=e.target.closest('[data-sedit]');if(se){const x=S.subjects.find(y=>y.id===se.dataset.sedit);if(x){draft={...x};sMsg='';renderView();$('#s-name').focus()}return}
+  const sd=e.target.closest('[data-sdel]');if(sd){delSubj(sd.dataset.sdel);if(draft.id===sd.dataset.sdel)draft=newDraft();renderView();return}
   if(e.target.closest('[data-add]')){addManual();return}
   const u=e.target.closest('[data-ui]');if(u){if(allowed(u.dataset.ui)){S.ui=u.dataset.ui;if(S.ui==='man')prepMan();save();paintAll()}return}
   const pl=e.target.closest('[data-play]');if(pl){play(pl.dataset.play,true);return}
@@ -349,12 +431,23 @@ function cfg(){S.cfg.focus=Math.max(1,Math.min(180,+$('#cf').value||25));S.cfg.b
 $('#cf').onchange=$('#cb').onchange=cfg;
 
 const tip=$('#tip');
-function showTip(b,x,y){tip.innerHTML=`<b>${b.dataset.k}</b>Início: ${b.dataset.a}<br>Término: ${b.dataset.b}<br>Total: ${b.dataset.d}`;tip.hidden=false;
+function showTip(b,x,y){const sn=b.dataset.sn,sa=b.dataset.sa,head=sn?(sn+(sa?' · '+sa:'')):b.dataset.k;
+  const body=b.dataset.a?`Início: ${b.dataset.a}<br>Término: ${b.dataset.b}<br>Total: ${b.dataset.d}`:`${b.dataset.day?b.dataset.day+'<br>':''}Total: ${b.dataset.d}`;
+  tip.innerHTML=`<b>${head}</b>${body}`;tip.hidden=false;
   const w=tip.offsetWidth,h=tip.offsetHeight;tip.style.left=Math.max(4,Math.min(x+14,innerWidth-w-8))+'px';tip.style.top=(y+18+h>innerHeight?y-h-12:y+18)+'px'}
-document.addEventListener('pointermove',e=>{const b=e.target.closest&&e.target.closest('.blk');if(b)showTip(b,e.clientX,e.clientY);else tip.hidden=true});
-document.addEventListener('focusin',e=>{const b=e.target.closest&&e.target.closest('.blk');if(b){const r=b.getBoundingClientRect();showTip(b,r.left+16,r.top)}});
+document.addEventListener('pointermove',e=>{const b=e.target.closest&&e.target.closest('.blk,.seg2');if(b)showTip(b,e.clientX,e.clientY);else tip.hidden=true});
+document.addEventListener('focusin',e=>{const b=e.target.closest&&e.target.closest('.blk,.seg2');if(b){const r=b.getBoundingClientRect();showTip(b,r.left+16,r.top)}});
 document.addEventListener('focusout',()=>{tip.hidden=true});
-document.addEventListener('input',e=>{if(e.target.id==='o-vol'){S.cfg.vol=+e.target.value;$('#volv').textContent=S.cfg.vol+'%';save()}});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.blk,.seg2');
+  if(b){const r=b.getBoundingClientRect();showTip(b,r.left+r.width/2,r.top);e.stopPropagation()}
+  else if(!tip.hidden)tip.hidden=true});
+document.addEventListener('change',e=>{if(e.target.id==='subjsel'){S.selSubj=e.target.value;save()}});
+document.addEventListener('input',e=>{const i=e.target,id=i.id,rgb=['s-r','s-g','s-b'];
+  if(id==='o-vol'){S.cfg.vol=+i.value;$('#volv').textContent=S.cfg.vol+'%';save();return}
+  if(id==='s-name')draft.name=i.value;else if(id==='s-area')draft.area=i.value;
+  else if(id==='s-col')setCol(i.value.toLowerCase(),id);
+  else if(id==='s-hex'){const v=i.value.trim().replace(/^#?/,'#');if(/^#[0-9a-f]{6}$/i.test(v))setCol(v.toLowerCase(),id)}
+  else if(rgb.includes(id)){const v=rgb.map(k=>$('#'+k).value);if(v.every(x=>x!==''&&+x>=0&&+x<=255))setCol(toHex(...v.map(Number)),id)}});
 let n=0;
 function tick(){const t=S.t;
   if(t.running&&t.end-Date.now()<=0){complete();return}
@@ -375,7 +468,7 @@ document.addEventListener('change',async e=>{const i=e.target;
 });
 document.addEventListener('visibilitychange',tick);
 setInterval(tick,1000);
-prepMan();paintAll();tick();
+prepMan();paintSubjSel();paintAll();tick();
 if('serviceWorker' in navigator){
   let waitingWorker=null,reloading=false,checking=false;
   const updBusy=()=>S.t.running||S.c.running;
@@ -459,17 +552,19 @@ else{
   const app=initializeApp(firebaseConfig),auth=getAuth(app);
   let db;try{db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})})}catch(e){db=getFirestore(app)}
   const d=id=>document.getElementById(id),dlg=d('dlg'),er=d('dl-err');
-  const T=(s,e,k)=>({s,e,k:k||'pomo'});
+  const T=(s,e,k,sub)=>({s,e,k:k||'pomo',sub:sub||null});
   let unsub=[];
   onAuthStateChanged(auth,u=>{
     unsub.forEach(f=>f());unsub=[];
     if(!u){setCloud(null);setAcct({mode:'out'});return}
     if(dlg.open)dlg.close();
-    const sc=collection(db,'users',u.uid,'sessions'),cd=doc(db,'users',u.uid,'meta','settings');
+    const sc=collection(db,'users',u.uid,'sessions'),cd=doc(db,'users',u.uid,'meta','settings'),jc=collection(db,'users',u.uid,'subjects');
     setCloud({
-      set:o=>setDoc(doc(sc,o.id),T(o.s,o.e,o.k)).catch(console.error),
+      set:o=>setDoc(doc(sc,o.id),T(o.s,o.e,o.k,o.sub)).catch(console.error),
       del:id=>deleteDoc(doc(sc,id)).catch(console.error),
-      cfg:c=>setDoc(cd,c).catch(console.error)
+      cfg:c=>setDoc(cd,c).catch(console.error),
+      subjSet:o=>setDoc(doc(jc,o.id),{name:o.name,area:o.area||'',color:o.color}).catch(console.error),
+      subjDel:id=>deleteDoc(doc(jc,id)).catch(console.error)
     });
     let first=true;
     unsub.push(onSnapshot(sc,snap=>{
@@ -483,6 +578,16 @@ else{
       setAcct({mode:'in',email:u.email,pending:snap.metadata.hasPendingWrites,fromCache:snap.metadata.fromCache})
     },()=>setAcct({mode:'in',email:u.email,err:true})));
     unsub.push(onSnapshot(cd,s=>{if(s.exists())applyCfg(s.data());else pushCfg()}));
+    let firstSubj=true;
+    unsub.push(onSnapshot(jc,snap=>{
+      const arr=snap.docs.map(x=>({id:x.id,...x.data()}));
+      if(firstSubj){firstSubj=false;
+        if(migSubjKey()!==u.uid){
+          const ids=new Set(arr.map(x=>x.id)),extra=localSubjects().filter(x=>!ids.has(x.id));
+          for(let i=0;i<extra.length;i+=400){const b=writeBatch(db);extra.slice(i,i+400).forEach(x=>b.set(doc(jc,x.id),{name:x.name,area:x.area||'',color:x.color}));b.commit().catch(console.error)}
+          arr.push(...extra);setMigSubj(u.uid)}}
+      applySubjects(arr);
+    }));
   });
   const msg=e=>({'auth/invalid-credential':'E-mail ou senha incorretos.','auth/email-already-in-use':'Esse e-mail já tem conta. Use Entrar.','auth/weak-password':'A senha precisa ter ao menos 6 caracteres.','auth/invalid-email':'E-mail inválido.','auth/missing-password':'Informe a senha.','auth/popup-closed-by-user':'','auth/unauthorized-domain':'Domínio não autorizado no Firebase (veja o tutorial, passo 7).'}[e.code]??('Não foi possível entrar ('+e.code+').'));
   const run=async f=>{er.textContent='';try{await f()}catch(e){er.textContent=msg(e)}};
