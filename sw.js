@@ -1,6 +1,6 @@
 // Suba de versão a CADA atualização publicada — é o que faz o navegador notar
 // que existe algo novo. Sem isso, nenhum aparelho detecta a atualização.
-const CACHE_NAME='pomodoro-v7';
+const CACHE_NAME='pomodoro-v8';
 const SHELL=['./','index.html','manifest.json','icon-192.png','icon-512.png','changelog.json'];
 
 self.addEventListener('install',e=>{

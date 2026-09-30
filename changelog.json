@@ -1,9 +1,7 @@
 {
-  "version": "7",
-  "title": "Novidades desta atualização",
+  "version": "8",
+  "title": "Correção",
   "notes": [
-    "Nova seção Conta em Configurações: mostra o e-mail logado e o status de sincronização.",
-    "Botão para trocar de conta, com seleção explícita de qual conta Google usar.",
-    "Facilita conferir, em cada aparelho, se todos estão realmente na mesma conta."
+    "Corrigida a configuração de sincronização — o login para sincronizar voltou a funcionar."
   ]
 }
