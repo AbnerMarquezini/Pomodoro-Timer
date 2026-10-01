@@ -1,7 +1,7 @@
 {
-  "version": "8",
+  "version": "9",
   "title": "Correção",
   "notes": [
-    "Corrigida a configuração de sincronização — o login para sincronizar voltou a funcionar."
+    "Corrigido: o status podia ficar preso em \"offline\" depois de trocar de conta — agora a página recarrega sozinha logo após o login da nova conta, evitando o problema."
   ]
 }

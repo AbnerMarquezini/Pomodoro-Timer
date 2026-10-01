@@ -546,9 +546,10 @@ import{initializeFirestore,getFirestore,persistentLocalCache,persistentMultipleT
 
 // COLE AQUI a configuração do seu projeto Firebase (veja o tutorial, passo 3)
 const firebaseConfig={
-  apiKey:"AIzaSyB03CxYV72846oDTn1ojdUtKdD5rg_fdNM",
-  authDomain:"pomodoro-estudo.firebaseapp.com",
-  projectId:"pomodoro-estudo",
+  apiKey: "AIzaSyB03CxYV72846oDTn1ojdUtKdD5rg_fdNM",
+  authDomain: "pomodoro-estudo.firebaseapp.com",
+  projectId: "pomodoro-estudo",
+  storageBucket: "pomodoro-estudo.firebasestorage.app",
   messagingSenderId: "548194224585",
   appId: "1:548194224585:web:30f2157ef6af0422a68018"
 };
@@ -559,10 +560,13 @@ else{
   let db;try{db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})})}catch(e){db=getFirestore(app)}
   const d=id=>document.getElementById(id),dlg=d('dlg'),er=d('dl-err');
   const T=(s,e,k,sub)=>({s,e,k:k||'pomo',sub:sub||null});
-  let unsub=[];
+  let unsub=[],pendingSwitch=false;
   onAuthStateChanged(auth,u=>{
     unsub.forEach(f=>f());unsub=[];
     if(!u){setCloud(null);setAcct({mode:'out'});return}
+    // Trocar de usuário sem recarregar pode deixar a conexão do Firestore
+    // presa em modo offline; um reload garante uma sessão nova e limpa.
+    if(pendingSwitch){location.reload();return}
     if(dlg.open)dlg.close();
     const sc=collection(db,'users',u.uid,'sessions'),cd=doc(db,'users',u.uid,'meta','settings'),jc=collection(db,'users',u.uid,'subjects');
     setCloud({
@@ -605,7 +609,7 @@ else{
   document.addEventListener('click',async e=>{
     if(e.target.closest('[data-login]')){er.textContent='';dlg.showModal()}
     if(e.target.closest('[data-logout]')){await signOut(auth);clearLocal()}
-    if(e.target.closest('[data-switch]')){await signOut(auth);clearLocal();er.textContent='';dlg.showModal()}
+    if(e.target.closest('[data-switch]')){pendingSwitch=true;await signOut(auth);clearLocal();er.textContent='';dlg.showModal()}
   });
 }
 </script>
