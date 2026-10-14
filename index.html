@@ -123,6 +123,7 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 .legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
 .acctbox{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
 .acctbox .nm{flex:1;min-width:180px}.acctbox small{color:var(--mute);display:block;margin-top:2px}
+.hrsel{display:grid;grid-template-columns:1fr 1fr;gap:12px}.hrsel label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--mute)}.hrsel select{font:inherit;padding:8px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
 @media(prefers-reduced-motion:reduce){.bar i{transition:none}}
 </style>
 <link rel="manifest" href="manifest.json">
@@ -189,7 +190,7 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 const K='pomodoro-estudo.v1';
 let S={sessions:[],cfg:{focus:25,brk:5},t:null,c:{acc:0,running:false},ui:'pomo',subjects:[],selSubj:'',mig:null,migSubj:null};
 try{const r=localStorage.getItem(K);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
-S.cfg=Object.assign({focus:25,brk:5,auto:false,snd:true,ntf:false,vol:80},S.cfg);S.c=S.c||{acc:0,running:false};S.ui=S.ui||'pomo';S.subjects=S.subjects||[];S.selSubj=S.selSubj||'';
+S.cfg=Object.assign({focus:25,brk:5,auto:false,snd:true,ntf:false,vol:80,dayStart:6,dayEnd:24},S.cfg);if(!(S.cfg.dayStart>=0&&S.cfg.dayEnd<=24&&S.cfg.dayEnd>S.cfg.dayStart)){S.cfg.dayStart=6;S.cfg.dayEnd=24}S.c=S.c||{acc:0,running:false};S.ui=S.ui||'pomo';S.subjects=S.subjects||[];S.selSubj=S.selSubj||'';
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
 const dur=m=>(m==='focus'?S.cfg.focus:S.cfg.brk)*60000;
 if(!S.t)S.t={mode:'focus',rem:dur('focus'),running:false};
@@ -205,12 +206,12 @@ const KL={pomo:'Foco',cron:'Cronômetro',man:'Manual'};
 let cloud=null,acct={mode:'off'};
 function addSess(o){S.sessions.push(o);save();if(cloud)cloud.set(o)}
 function delSess(id){S.sessions=S.sessions.filter(x=>x.id!==id);save();if(cloud)cloud.del(id)}
-function pushCfg(){if(cloud){const{focus,brk,auto,snd,vol}=S.cfg;cloud.cfg({focus,brk,auto,snd,vol})}}
+function pushCfg(){if(cloud){const{focus,brk,auto,snd,vol,dayStart,dayEnd}=S.cfg;cloud.cfg({focus,brk,auto,snd,vol,dayStart,dayEnd})}}
 function setCloud(c){cloud=c}
 function setAcct(a){acct=a;paintAcct()}
 function localSessions(){return S.sessions}
 function applySessions(a){S.sessions=a;save();paintAll()}
-function applyCfg(d){for(const k of['focus','brk','auto','snd','vol'])if(d[k]!==undefined)S.cfg[k]=d[k];save();$('#cf').value=S.cfg.focus;$('#cb').value=S.cfg.brk;if(!S.t.running)S.t.rem=dur(S.t.mode);paintAll()}
+function applyCfg(d){for(const k of['focus','brk','auto','snd','vol','dayStart','dayEnd'])if(d[k]!==undefined)S.cfg[k]=d[k];if(!(S.cfg.dayStart>=0&&S.cfg.dayEnd<=24&&S.cfg.dayEnd>S.cfg.dayStart)){S.cfg.dayStart=6;S.cfg.dayEnd=24}save();$('#cf').value=S.cfg.focus;$('#cb').value=S.cfg.brk;if(!S.t.running)S.t.rem=dur(S.t.mode);paintAll()}
 function migKey(){return S.mig}
 function setMig(v){S.mig=v;save()}
 function addSubj(o){S.subjects.push(o);save();if(cloud)cloud.subjSet(o)}
@@ -300,18 +301,18 @@ function paintTimer(){const t=S.t,cr=S.ui==='cron'||(S.ui==='man'&&S.c.running),
   const k=dk(now);$('#tday').textContent=fmt(mins(segs().filter(x=>x.day===k)));
   $('#cf').disabled=$('#cb').disabled=t.running}
 
-function vDay(){const key=dk(A),H=48,base=new Date(A.getFullYear(),A.getMonth(),A.getDate(),6).getTime();
-  let g='';for(let h=6;h<=23;h++)g+=`<div class="hr" style="top:${(h-6)*H}px"><span>${pad(h)}:00</span></div>`;
-  const l=segs().filter(x=>x.day===key);
+function vDay(){const key=dk(A),H=48,ds=S.cfg.dayStart,de=S.cfg.dayEnd,N=de-ds,base=new Date(A.getFullYear(),A.getMonth(),A.getDate(),ds).getTime();
+  let g='';for(let h=ds;h<de;h++)g+=`<div class="hr" style="top:${(h-ds)*H}px"><span>${pad(h)}:00</span></div>`;
+  const l=segs().filter(x=>x.day===key),hid=l.filter(x=>x.e<=base||x.s>=base+N*36e5).length;
   const live=S.t.running&&S.t.mode==='focus'?S.t.segStart:S.c.running?S.c.segStart:-1;
-  l.forEach(x=>{const top=Math.max(0,(x.s-base)/36e5*H),bot=Math.min(18*H,(x.e-base)/36e5*H);if(bot<=top)return;
+  l.forEach(x=>{const top=Math.max(0,(x.s-base)/36e5*H),bot=Math.min(N*H,(x.e-base)/36e5*H);if(bot<=top)return;
     const m=(x.e-x.s)/6e4;
     const sj=x.sub?S.subjects.find(y=>y.id===x.sub):null,bg=sj?sj.color:'',fg=bg?contrastColor(bg):'',lbl=sj?(sj.name+(sj.area?' · '+sj.area:'')):KL[x.k]||'Foco';
     g+=`<div class="blk${x.s===live||(live>0&&x.e>Date.now()-2000)?' live':''}" style="top:${top}px;height:${Math.max(6,bot-top-1)}px${bg?`;background:${bg};color:${fg}`:''}" tabindex="0" data-k="${KL[x.k]||'Foco'}" data-a="${hm(x.s)}" data-b="${hm(x.e)}" data-d="${fmt(m)}" data-sn="${sj?esc(sj.name):''}" data-sa="${sj&&sj.area?esc(sj.area):''}"><b>${lbl}</b> ${hm(x.s)} – ${hm(x.e)} · ${fmt(m)}</div>`});
-  if(key===dk(Date.now())){const y=(Date.now()-base)/36e5*H;if(y>=0&&y<=18*H)g+=`<div class="now" style="top:${y}px"></div>`}
+  if(key===dk(Date.now())){const y=(Date.now()-base)/36e5*H;if(y>=0&&y<=N*H)g+=`<div class="now" style="top:${y}px"></div>`}
   return `<div class="nav"><h2>${A.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})}</h2>${nav()}</div>
-  <div class="grid">${g}</div>
-  <p class="sum">Total do dia: <b>${fmt(mins(l))}</b>${l.length?'':' — ainda sem registros. Inicie um foco para ver o bloco aparecer aqui.'}</p>`}
+  <div class="grid" style="height:${N*H}px">${g}</div>
+  <p class="sum">Total do dia: <b>${fmt(mins(l))}</b>${l.length?'':' — ainda sem registros. Inicie um foco para ver o bloco aparecer aqui.'}${hid?` · ${hid} registro${hid>1?'s':''} fora do horário exibido (ajuste em Configurações)`:''}</p>`}
 
 function nav(){return `<button class="btn" data-act="-1" aria-label="Anterior">‹</button><button class="btn" data-act="0">Hoje</button><button class="btn" data-act="1" aria-label="Próximo">›</button>`}
 
@@ -392,6 +393,7 @@ function paintSubjSel(){const sel=$('#subjsel');if(!sel)return;const busy=S.t.ru
   if(sel.dataset.n!==key){sel.innerHTML=opts.join('');sel.dataset.n=key}
   if(sel.value!==S.selSubj)sel.value=S.selSubj;
   sel.disabled=busy}
+function hourSel(id,a,b,v){let o='';for(let h=a;h<=b;h++)o+=`<option value="${h}"${h===v?' selected':''}>${pad(h)}:00</option>`;return `<select id="${id}">${o}</select>`}
 function vSet(){const c=S.cfg;
   const row=(k,t)=>`<div class="snd"><div class="nm"><b>${t}</b><small>${SND[k]?SND[k].name:'Som padrão'}</small></div><label class="btn">Escolher .mp3<input type="file" accept=".mp3,audio/mpeg" data-snd="${k}"></label><button class="btn" data-play="${k}">Testar</button>${SND[k]?`<button class="btn" data-rm="${k}">Remover</button>`:''}</div>`;
   const acctSec=acct.mode==='in'
@@ -404,7 +406,7 @@ function vSet(){const c=S.cfg;
   <p class="er">${ntfMsg}</p>
   <label class="opt"><input type="checkbox" id="o-auto" ${c.auto?'checked':''}>Iniciar o próximo período automaticamente</label>
   <h4 class="sub">Sons</h4>${row('focus','Início do foco')}${row('break','Início da pausa')}
-  <p class="er">${sndMsg}</p><p class="sum">Os arquivos ficam guardados neste navegador (até 10 MB cada). Sem arquivo, toca um bipe padrão.</p><h3 class="sec">Matérias</h3>${subjUI()}`}
+  <p class="er">${sndMsg}</p><p class="sum">Os arquivos ficam guardados neste navegador (até 10 MB cada). Sem arquivo, toca um bipe padrão.</p><h3 class="sec">Registros diários</h3><div class="hrsel"><label>Início do dia${hourSel('o-ds',0,23,c.dayStart)}</label><label>Fim do dia${hourSel('o-de',1,24,c.dayEnd)}</label></div><p class="sum">Define o intervalo de horas mostrado na aba Dia. Registros fora dele continuam salvos e contam nos totais.</p><h3 class="sec">Matérias</h3>${subjUI()}`}
 
 function renderView(){$('#view').innerHTML={day:vDay,week:vWeek,month:vMonth,hist:vHist,set:vSet}[tab]();
   document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab))}
@@ -462,6 +464,9 @@ document.addEventListener('change',async e=>{const i=e.target;
   if(i.id==='o-snd'){S.cfg.snd=i.checked;save();pushCfg()}
   else if(i.id==='o-auto'){S.cfg.auto=i.checked;save();pushCfg()}
   else if(i.id==='o-vol'){pushCfg();play('focus',true)}
+  else if(i.id==='o-ds'||i.id==='o-de'){let a=+$('#o-ds').value,b=+$('#o-de').value;
+    if(i.id==='o-ds'&&b<=a)b=a+1;if(i.id==='o-de'&&a>=b)a=b-1;
+    S.cfg.dayStart=a;S.cfg.dayEnd=b;save();pushCfg();renderView()}
   else if(i.id==='o-ntf'){ntfMsg='';
     if(i.checked){try{const r=await Notification.requestPermission();S.cfg.ntf=r==='granted';if(!S.cfg.ntf)ntfMsg='Permissão negada. Libere as notificações nas configurações do navegador.'}catch(x){S.cfg.ntf=false;ntfMsg='Notificações indisponíveis neste navegador.'}}
     else S.cfg.ntf=false;

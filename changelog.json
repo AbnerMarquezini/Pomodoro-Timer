@@ -1,7 +1,7 @@
 {
-  "version": "9",
-  "title": "Correção",
+  "version": "10",
+  "title": "Novidade",
   "notes": [
-    "Corrigido: o status podia ficar preso em \"offline\" depois de trocar de conta — agora a página recarrega sozinha logo após o login da nova conta, evitando o problema."
+    "Agora a aba de horários diários é personalizável. Acesse o menu de configurações parar verificar as opções."
   ]
 }
