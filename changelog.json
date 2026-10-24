@@ -1,7 +1,8 @@
 {
-  "version": "10",
-  "title": "Novidade",
+  "title": "Novidade: relógio com fuso horário",
   "notes": [
-    "Agora a aba de horários diários é personalizável. Acesse o menu de configurações parar verificar as opções."
+    "Novo relógio abaixo do timer, com o fuso horário selecionado escrito no topo.",
+    "Botões rápidos para os fusos do Brasil: GMT−2, −3, −4 e −5.",
+    "Menu com os fusos horários do mundo; a escolha fica salva neste aparelho."
   ]
 }
