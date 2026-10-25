@@ -1,8 +1,7 @@
 {
-  "title": "Gráfico do relatório mais legível",
+  "title": "Relatório: gráfico corrigido e opção Semana removida",
   "notes": [
-    "As barras não cobrem mais as datas: o eixo das datas fica numa faixa própria, abaixo do gráfico.",
-    "Novas linhas de grade horizontais (com os valores de tempo) e verticais (alinhadas às datas).",
-    "Com poucas barras, o tempo de cada uma aparece acima dela."
+    "Gráfico do relatório refeito: as barras não cobrem mais as datas, com linhas de grade horizontais e verticais.",
+    "A opção Semana saiu do relatório (ela repetia a aba Semana); ficam Mês e Personalizado."
   ]
 }

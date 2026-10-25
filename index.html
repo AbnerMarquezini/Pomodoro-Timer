@@ -389,14 +389,13 @@ function vWeek(){const wd=(A.getDay()+6)%7,st=new Date(A.getFullYear(),A.getMont
 const RPK='pomodoro-report-period',RPRE=/^\d{4}-\d{2}-\d{2}$/;
 let RP={mode:'month',from:null,to:null,err:'',grp:'d'};
 try{const v=JSON.parse(localStorage.getItem(RPK)||'null');
-  if(v&&['week','month','custom'].includes(v.mode)){RP.mode=v.mode;if(v.grp==='w')RP.grp='w';if(RPRE.test(v.from||'')&&RPRE.test(v.to||'')&&v.from<=v.to){RP.from=v.from;RP.to=v.to}}}catch(e){}
+  if(v&&['week','month','custom'].includes(v.mode)){RP.mode=v.mode==='week'?'month':v.mode;if(v.grp==='w')RP.grp='w';if(RPRE.test(v.from||'')&&RPRE.test(v.to||'')&&v.from<=v.to){RP.from=v.from;RP.to=v.to}}}catch(e){}
 const rpSave=()=>{try{localStorage.setItem(RPK,JSON.stringify({mode:RP.mode,from:RP.from,to:RP.to,grp:RP.grp}))}catch(e){}};
 const pk=k=>new Date(+k.slice(0,4),+k.slice(5,7)-1,+k.slice(8,10));
 const addD=(d,n)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
 const dayDiff=(a,b)=>Math.round((Date.UTC(b.getFullYear(),b.getMonth(),b.getDate())-Date.UTC(a.getFullYear(),a.getMonth(),a.getDate()))/864e5);
 // Intervalo exibido no relatório (reaproveitável pelo PDF): {mode, from, to} com datas locais
 function reportRange(){
-  if(RP.mode==='week'){const f=addD(A,-((A.getDay()+6)%7));return{mode:'week',from:f,to:addD(f,6)}}
   if(RP.mode==='custom'){
     if(RP.from&&RP.to)return{mode:'custom',from:pk(RP.from),to:pk(RP.to)};
     const n=new Date(),t=new Date(n.getFullYear(),n.getMonth(),n.getDate());return{mode:'custom',from:addD(t,-29),to:t}}
@@ -425,9 +424,9 @@ function rpBar(r){
   const b=(m,t)=>`<button type="button" class="rp-b" data-rp="${m}" aria-pressed="${RP.mode===m}">${t}</button>`,mx=dk(Date.now());
   const cu=RP.mode==='custom'?`<div class="rp-cu"><label>De<input type="date" id="rp-from" value="${dk(r.from.getTime())}" max="${mx}"></label><label>Até<input type="date" id="rp-to" value="${dk(r.to.getTime())}" max="${mx}"></label></div><p class="er" id="rp-er">${esc(RP.err)}</p>`:'';
   const g=(k,t)=>`<button type="button" class="rp-b" data-rg="${k}" aria-pressed="${RP.grp===k}">${t}</button>`;
-  const nd=dayDiff(r.from,r.to)+1,gp=RP.mode==='week'?'':`<div class="rp-gr" role="group" aria-label="Agrupar as barras por"><span>Barras por</span>${g('d','Dias')}${g('w','Semanas')}</div>`,
-    wn=RP.mode!=='week'&&RP.grp==='d'&&nd>300?`<p class="rp-w" role="status">Atenção: o período tem ${nd} dias. Com as barras por dia, o gráfico terá centenas de barras muito finas e difíceis de ler. Para essa escala, prefira agrupar por Semanas.</p>`:'';
-  return `<div class="rp"><div class="rp-seg" role="group" aria-label="Período do relatório">${b('week','Semana')}${b('month','Mês')}${b('custom','Personalizado')}</div>${cu}${gp}${wn}</div>`}
+  const nd=dayDiff(r.from,r.to)+1,gp=`<div class="rp-gr" role="group" aria-label="Agrupar as barras por"><span>Barras por</span>${g('d','Dias')}${g('w','Semanas')}</div>`,
+    wn=RP.grp==='d'&&nd>300?`<p class="rp-w" role="status">Atenção: o período tem ${nd} dias. Com as barras por dia, o gráfico terá centenas de barras muito finas e difíceis de ler. Para essa escala, prefira agrupar por Semanas.</p>`:'';
+  return `<div class="rp"><div class="rp-seg" role="group" aria-label="Período do relatório">${b('month','Mês')}${b('custom','Personalizado')}</div>${cu}${gp}${wn}</div>`}
 
 const PN={manha:'Manhã',tarde:'Tarde',noite:'Noite'},PR={manha:'06h–12h',tarde:'12h–18h',noite:'18h–06h'};
 // Gráfico: barras numa área própria, com linhas de grade horizontais (valores) e verticais (datas)
@@ -445,12 +444,12 @@ function chartHTML(bk,gr,nd){
   return `<div class="ch" style="--gp:${n>150?0:n>60?.5:1.5}px"><div class="ch-y">${yl}</div><div class="ch-p">${hl}${vl}<div class="ch-b" style="grid-template-columns:repeat(${n},1fr)">${cells}</div></div><div class="ch-x">${xl}</div></div>`}
 function vMonth(){const r=reportRange(),fk=dk(r.from.getTime()),tk=dk(r.to.getTime()),nd=dayDiff(r.from,r.to)+1,title=rangeTitle(r);
   const l=segs().filter(x=>x.day>=fk&&x.day<=tk),o=byDay(l),tot=mins(l),ds=Object.keys(o);
-  const T={week:'na semana',month:'no mês',custom:'no período'}[r.mode];
+  const T={month:'no mês',custom:'no período'}[r.mode];
   let body;
   if(!ds.length)body=`<p class="empty">Nenhum estudo registrado ${r.mode==='month'?'em':'no período de'} ${title}.</p>`;
   else{const p=periods(l),top=Object.keys(p).sort((a,b)=>p[b]-p[a])[0],best=ds.slice().sort((a,b)=>o[b]-o[a])[0];
     // barras por dia ou por semana (escolha do usuário), em qualquer período
-    const gr=r.mode==='week'?'d':RP.grp,bk=[],ix={},WD=['dom','seg','ter','qua','qui','sex','sáb'],y2=r.from.getFullYear()!==r.to.getFullYear();
+    const gr=RP.grp,bk=[],ix={},WD=['dom','seg','ter','qua','qui','sex','sáb'],y2=r.from.getFullYear()!==r.to.getFullYear();
     for(let i=0;i<nd;i++){const d=addD(r.from,i),k=dk(d.getTime());let id,lb,tt;
       if(gr==='d'){id=k;lb=nd<=7?WD[d.getDay()]:nd<=31?d.getDate():pad(d.getDate())+'/'+pad(d.getMonth()+1);tt=pad(d.getDate())+'/'+pad(d.getMonth()+1)+(y2?'/'+d.getFullYear():'')}
       else{const m=addD(d,-((d.getDay()+6)%7));id=dk(m.getTime());lb=pad(m.getDate())+'/'+pad(m.getMonth()+1);tt='Semana de '+lb+(y2?'/'+m.getFullYear():'')}
@@ -537,7 +536,6 @@ document.addEventListener('click',e=>{
     if(n===0)A=new Date();
     else if(tab==='day')A=new Date(A.getFullYear(),A.getMonth(),A.getDate()+n);
     else if(tab==='week')A=new Date(A.getFullYear(),A.getMonth(),A.getDate()+7*n);
-    else if(tab==='month'&&RP.mode==='week')A=new Date(A.getFullYear(),A.getMonth(),A.getDate()+7*n);
     else A=new Date(A.getFullYear(),A.getMonth()+n,1);
     renderView();return}
   const sw=e.target.closest('[data-sw]');if(sw){setCol(sw.dataset.sw);return}
