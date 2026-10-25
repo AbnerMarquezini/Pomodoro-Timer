@@ -1,7 +1,8 @@
 {
-  "title": "Ajustes no seletor do relatório",
+  "title": "Gráfico do relatório mais legível",
   "notes": [
-    "Na opção Semana, o gráfico mostra sempre os dias; o seletor Dias/Semanas fica só em Mês e Personalizado.",
-    "Períodos acima de 300 dias com barras por dia agora exibem um aviso sugerindo agrupar por Semanas."
+    "As barras não cobrem mais as datas: o eixo das datas fica numa faixa própria, abaixo do gráfico.",
+    "Novas linhas de grade horizontais (com os valores de tempo) e verticais (alinhadas às datas).",
+    "Com poucas barras, o tempo de cada uma aparece acima dela."
   ]
 }

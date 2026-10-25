@@ -61,6 +61,19 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--amber);outline-
 .rp-w{margin:10px 0 0;padding:8px 12px;border-left:3px solid var(--amber);background:var(--amber-bg);border-radius:0 8px 8px 0;font-size:13px}
 .days div{white-space:nowrap;min-width:0}
 .days.dense{gap:1px}
+.ch{display:grid;grid-template-columns:44px 1fr;column-gap:6px;margin-top:16px}
+.ch-y{position:relative}
+.ch-y span{position:absolute;right:0;transform:translateY(50%);font-size:10px;line-height:1;color:var(--mute);white-space:nowrap}
+.ch-p{position:relative;height:170px;border-left:1px solid rgba(128,128,128,.55);border-bottom:1px solid rgba(128,128,128,.55)}
+.ch-h{position:absolute;left:0;right:0;height:0;border-top:1px solid rgba(128,128,128,.25)}
+.ch-v{position:absolute;top:0;bottom:0;width:0;border-left:1px solid rgba(128,128,128,.15)}
+.ch-b{position:absolute;inset:0;display:grid}
+.ch-c{position:relative;min-width:0}
+.ch-c i{position:absolute;left:var(--gp);right:var(--gp);bottom:0;background:var(--blue);border-radius:3px 3px 0 0;min-height:0}
+.ch-c:hover i{filter:brightness(1.25)}
+.ch-c em{position:absolute;left:50%;transform:translate(-50%,-3px);font-style:normal;font-size:10px;line-height:1.2;white-space:nowrap;color:var(--ink);background:var(--card);padding:0 3px;border-radius:3px}
+.ch-x{grid-column:2;position:relative;height:20px;margin-top:5px}
+.ch-x span{position:absolute;top:0;transform:translateX(-50%);font-size:10px;white-space:nowrap;color:var(--mute)}
 .rp-cu{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
 .rp-cu label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--mute)}
 .rp-cu input{font:inherit;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
@@ -407,6 +420,7 @@ document.addEventListener('change',e=>{
   if(!f||!u){RP.err='Preencha as duas datas.';er.textContent=RP.err;return}
   if(f>u){RP.err='A data inicial não pode ser depois da final.';er.textContent=RP.err;return}
   RP.from=f>today?today:f;RP.to=u>today?today:u;RP.err='';rpSave();renderView()});
+let rsT,rsW=innerWidth;window.addEventListener('resize',()=>{clearTimeout(rsT);rsT=setTimeout(()=>{if(innerWidth===rsW)return;rsW=innerWidth;if(tab==='month'&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('.rp-cu')))renderView()},250)});
 function rpBar(r){
   const b=(m,t)=>`<button type="button" class="rp-b" data-rp="${m}" aria-pressed="${RP.mode===m}">${t}</button>`,mx=dk(Date.now());
   const cu=RP.mode==='custom'?`<div class="rp-cu"><label>De<input type="date" id="rp-from" value="${dk(r.from.getTime())}" max="${mx}"></label><label>Até<input type="date" id="rp-to" value="${dk(r.to.getTime())}" max="${mx}"></label></div><p class="er" id="rp-er">${esc(RP.err)}</p>`:'';
@@ -416,6 +430,19 @@ function rpBar(r){
   return `<div class="rp"><div class="rp-seg" role="group" aria-label="Período do relatório">${b('week','Semana')}${b('month','Mês')}${b('custom','Personalizado')}</div>${cu}${gp}${wn}</div>`}
 
 const PN={manha:'Manhã',tarde:'Tarde',noite:'Noite'},PR={manha:'06h–12h',tarde:'12h–18h',noite:'18h–06h'};
+// Gráfico: barras numa área própria, com linhas de grade horizontais (valores) e verticais (datas)
+// e rótulos do eixo X numa faixa separada, para as barras nunca cobrirem as datas.
+function yStep(mx){for(const c of [5,10,15,20,30,60,90,120,180,240,360,480,720,1440])if(mx/c<=4)return c;return 1440*Math.ceil(mx/1440/4)}
+function chartHTML(bk,gr,nd){
+  const n=bk.length,mx=Math.max(...bk.map(x=>x.v)),step=yStep(mx),nt=Math.max(1,Math.ceil(mx/step)),top=step*nt;
+  const vw=(document.querySelector('#view')||{}).clientWidth||600,avail=Math.max(180,vw-90);
+  const lw=gr==='d'?(nd<=7?30:nd<=31?20:42):42,st=Math.max(1,Math.ceil(n*lw*1.25/avail));
+  let hl='',yl='<span style="bottom:0">0</span>',vl='',xl='',cells='';
+  for(let k=1;k<=nt;k++){const pc=100*k*step/top;hl+=`<div class="ch-h" style="bottom:${pc}%"></div>`;yl+=`<span style="bottom:${pc}%">${fmt(k*step)}</span>`}
+  bk.forEach((x,i)=>{const c=100*(i+.5)/n,h=100*x.v/top;
+    if(i%st===0){vl+=`<div class="ch-v" style="left:${c}%"></div>`;xl+=`<span style="left:${c}%">${x.lb}</span>`}
+    cells+=`<div class="ch-c" title="${x.tt}: ${fmt(x.v)}"><i style="height:${h}%"></i>${n<=14&&x.v>0?`<em style="bottom:${h}%">${fmt(x.v)}</em>`:''}</div>`});
+  return `<div class="ch" style="--gp:${n>150?0:n>60?.5:1.5}px"><div class="ch-y">${yl}</div><div class="ch-p">${hl}${vl}<div class="ch-b" style="grid-template-columns:repeat(${n},1fr)">${cells}</div></div><div class="ch-x">${xl}</div></div>`}
 function vMonth(){const r=reportRange(),fk=dk(r.from.getTime()),tk=dk(r.to.getTime()),nd=dayDiff(r.from,r.to)+1,title=rangeTitle(r);
   const l=segs().filter(x=>x.day>=fk&&x.day<=tk),o=byDay(l),tot=mins(l),ds=Object.keys(o);
   const T={week:'na semana',month:'no mês',custom:'no período'}[r.mode];
@@ -428,7 +455,7 @@ function vMonth(){const r=reportRange(),fk=dk(r.from.getTime()),tk=dk(r.to.getTi
       if(gr==='d'){id=k;lb=nd<=7?WD[d.getDay()]:nd<=31?d.getDate():pad(d.getDate())+'/'+pad(d.getMonth()+1);tt=pad(d.getDate())+'/'+pad(d.getMonth()+1)+(y2?'/'+d.getFullYear():'')}
       else{const m=addD(d,-((d.getDay()+6)%7));id=dk(m.getTime());lb=pad(m.getDate())+'/'+pad(m.getMonth()+1);tt='Semana de '+lb+(y2?'/'+m.getFullYear():'')}
       if(!(id in ix)){ix[id]=bk.length;bk.push({lb,tt,v:0})}bk[ix[id]].v+=o[k]||0}
-    const mx=Math.max(...bk.map(x=>x.v)),st=bk.length>31?Math.ceil(bk.length/14):1,bars=bk.map((x,i)=>`<div title="${x.tt}: ${fmt(x.v)}"><i style="height:${100*x.v/mx*.8}%"></i>${i%st===0?x.lb:''}</div>`).join('');
+    const chart=chartHTML(bk,gr,nd);
     body=`<div class="stats">
       <div class="stat"><small>Total ${T}</small><b>${fmt(tot)}</b></div>
       <div class="stat"><small>Dias com estudo</small><b>${ds.length} de ${nd}</b></div>
@@ -436,7 +463,7 @@ function vMonth(){const r=reportRange(),fk=dk(r.from.getTime()),tk=dk(r.to.getTi
       <div class="stat"><small>Melhor dia</small><b>${best.slice(8)}/${best.slice(5,7)} · ${fmt(o[best])}</b></div></div>
     <p class="hl">Seu período de maior atividade foi a <b>${PN[top].toLowerCase()}</b>, com <b>${fmt(p[top])}</b> (${Math.round(100*p[top]/tot)}% do total).</p>
     <div class="pers">${Object.keys(p).map(k=>`<div class="per${k===top?' top':''}"><small>${PN[k]} · ${PR[k]}</small><b>${fmt(p[k])}</b><small>${Math.round(100*p[k]/tot)}%</small></div>`).join('')}</div>
-    <h3>Tempo por ${gr==='w'?'semana':'dia'}</h3><div class="days${bk.length>31?' dense':''}">${bars}</div>`}
+    <h3>Tempo por ${gr==='w'?'semana':'dia'}</h3>${chart}`}
   return `${rpBar(r)}<div class="nav"><h2>${title}</h2>${nav()}</div>${body}`}
 
 function vHist(){const L=S.sessions.slice().sort((a,b)=>b.s-a.s),f=flash;flash='';
