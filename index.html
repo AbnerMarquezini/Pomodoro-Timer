@@ -51,6 +51,19 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--amber);outline-
 .wc-sel{text-align:left}
 .wc-sel label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
 .wc-sel select{font:inherit;width:100%;padding:8px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.rp{margin-bottom:14px}
+.rp-seg{display:flex;flex-wrap:wrap;gap:6px}
+.rp-b{font:inherit;font-size:13px;font-weight:500;color:inherit;cursor:pointer;border:1px solid var(--line);background:transparent;border-radius:8px;padding:6px 12px}
+.rp-b:hover{background:var(--bg)}
+.rp-b[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:var(--blue-t)}
+.rp-gr{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:10px;font-size:12px;color:var(--mute)}
+.rp-gr span{margin-right:2px}
+.rp-w{margin:10px 0 0;padding:8px 12px;border-left:3px solid var(--amber);background:var(--amber-bg);border-radius:0 8px 8px 0;font-size:13px}
+.days div{white-space:nowrap;min-width:0}
+.days.dense{gap:1px}
+.rp-cu{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
+.rp-cu label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--mute)}
+.rp-cu input{font:inherit;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
 .today{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);color:var(--mute);font-size:13px}
 .today b{color:var(--ink);font-size:17px}
 .tabs{display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid var(--line)}
@@ -359,24 +372,72 @@ function vWeek(){const wd=(A.getDay()+6)%7,st=new Date(A.getFullYear(),A.getMont
   ${days.map(x=>`<div class="wk${x.k===dk(Date.now())?' hoje':''}"><span class="n">${x.n}</span><div class="t">${x.m?bar(x):''}</div><span class="v">${x.m?fmt(x.m):'—'}</span></div>`).join('')}
   <p class="sum">Total da semana: <b>${fmt(tot)}</b> · média por dia: <b>${fmt(tot/7)}</b></p>${legend}`}
 
+/* ===== Relatório: período (semana / mês / personalizado) ===== */
+const RPK='pomodoro-report-period',RPRE=/^\d{4}-\d{2}-\d{2}$/;
+let RP={mode:'month',from:null,to:null,err:'',grp:'d'};
+try{const v=JSON.parse(localStorage.getItem(RPK)||'null');
+  if(v&&['week','month','custom'].includes(v.mode)){RP.mode=v.mode;if(v.grp==='w')RP.grp='w';if(RPRE.test(v.from||'')&&RPRE.test(v.to||'')&&v.from<=v.to){RP.from=v.from;RP.to=v.to}}}catch(e){}
+const rpSave=()=>{try{localStorage.setItem(RPK,JSON.stringify({mode:RP.mode,from:RP.from,to:RP.to,grp:RP.grp}))}catch(e){}};
+const pk=k=>new Date(+k.slice(0,4),+k.slice(5,7)-1,+k.slice(8,10));
+const addD=(d,n)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
+const dayDiff=(a,b)=>Math.round((Date.UTC(b.getFullYear(),b.getMonth(),b.getDate())-Date.UTC(a.getFullYear(),a.getMonth(),a.getDate()))/864e5);
+// Intervalo exibido no relatório (reaproveitável pelo PDF): {mode, from, to} com datas locais
+function reportRange(){
+  if(RP.mode==='week'){const f=addD(A,-((A.getDay()+6)%7));return{mode:'week',from:f,to:addD(f,6)}}
+  if(RP.mode==='custom'){
+    if(RP.from&&RP.to)return{mode:'custom',from:pk(RP.from),to:pk(RP.to)};
+    const n=new Date(),t=new Date(n.getFullYear(),n.getMonth(),n.getDate());return{mode:'custom',from:addD(t,-29),to:t}}
+  return{mode:'month',from:new Date(A.getFullYear(),A.getMonth(),1),to:new Date(A.getFullYear(),A.getMonth()+1,0)}}
+function rangeTitle(r){
+  if(r.mode==='month')return cap(r.from.toLocaleDateString('pt-BR',{month:'long',year:'numeric'}));
+  const o=r.mode==='custom'||r.from.getFullYear()!==r.to.getFullYear()?{day:'numeric',month:'short',year:'numeric'}:{day:'numeric',month:'short'};
+  return r.from.toLocaleDateString('pt-BR',o)+' – '+r.to.toLocaleDateString('pt-BR',o)}
+function setRP(m){
+  if(m==='custom'&&!RP.from){const r=reportRange();RP.from=dk(r.from.getTime());RP.to=dk(r.to.getTime())}
+  RP.mode=m;RP.err='';rpSave();renderView()}
+function shiftCustom(n){
+  const r=reportRange(),nd=dayDiff(r.from,r.to)+1,now=new Date(),td=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  let f,t;
+  if(n===0){t=td;f=addD(td,-(nd-1))}
+  else{f=addD(r.from,n*nd);t=addD(r.to,n*nd);if(t>td){t=td;f=addD(td,-(nd-1))}}
+  RP.from=dk(f.getTime());RP.to=dk(t.getTime());RP.err='';rpSave();renderView()}
+document.addEventListener('change',e=>{
+  const t=e.target;if(!t||(t.id!=='rp-from'&&t.id!=='rp-to'))return;
+  const f=$('#rp-from').value,u=$('#rp-to').value,er=$('#rp-er'),today=dk(Date.now());
+  if(!f||!u){RP.err='Preencha as duas datas.';er.textContent=RP.err;return}
+  if(f>u){RP.err='A data inicial não pode ser depois da final.';er.textContent=RP.err;return}
+  RP.from=f>today?today:f;RP.to=u>today?today:u;RP.err='';rpSave();renderView()});
+function rpBar(r){
+  const b=(m,t)=>`<button type="button" class="rp-b" data-rp="${m}" aria-pressed="${RP.mode===m}">${t}</button>`,mx=dk(Date.now());
+  const cu=RP.mode==='custom'?`<div class="rp-cu"><label>De<input type="date" id="rp-from" value="${dk(r.from.getTime())}" max="${mx}"></label><label>Até<input type="date" id="rp-to" value="${dk(r.to.getTime())}" max="${mx}"></label></div><p class="er" id="rp-er">${esc(RP.err)}</p>`:'';
+  const g=(k,t)=>`<button type="button" class="rp-b" data-rg="${k}" aria-pressed="${RP.grp===k}">${t}</button>`;
+  const nd=dayDiff(r.from,r.to)+1,gp=RP.mode==='week'?'':`<div class="rp-gr" role="group" aria-label="Agrupar as barras por"><span>Barras por</span>${g('d','Dias')}${g('w','Semanas')}</div>`,
+    wn=RP.mode!=='week'&&RP.grp==='d'&&nd>300?`<p class="rp-w" role="status">Atenção: o período tem ${nd} dias. Com as barras por dia, o gráfico terá centenas de barras muito finas e difíceis de ler. Para essa escala, prefira agrupar por Semanas.</p>`:'';
+  return `<div class="rp"><div class="rp-seg" role="group" aria-label="Período do relatório">${b('week','Semana')}${b('month','Mês')}${b('custom','Personalizado')}</div>${cu}${gp}${wn}</div>`}
+
 const PN={manha:'Manhã',tarde:'Tarde',noite:'Noite'},PR={manha:'06h–12h',tarde:'12h–18h',noite:'18h–06h'};
-function vMonth(){const y=A.getFullYear(),m=A.getMonth(),ym=y+'-'+pad(m+1),nd=new Date(y,m+1,0).getDate();
-  const l=segs().filter(x=>x.day.slice(0,7)===ym),o=byDay(l),tot=mins(l),ds=Object.keys(o);
-  const title=cap(new Date(y,m,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'}));
+function vMonth(){const r=reportRange(),fk=dk(r.from.getTime()),tk=dk(r.to.getTime()),nd=dayDiff(r.from,r.to)+1,title=rangeTitle(r);
+  const l=segs().filter(x=>x.day>=fk&&x.day<=tk),o=byDay(l),tot=mins(l),ds=Object.keys(o);
+  const T={week:'na semana',month:'no mês',custom:'no período'}[r.mode];
   let body;
-  if(!ds.length)body=`<p class="empty">Nenhum estudo registrado em ${title}.</p>`;
-  else{const p=periods(l),top=Object.keys(p).sort((a,b)=>p[b]-p[a])[0],best=ds.sort((a,b)=>o[b]-o[a])[0];
-    const mx=Math.max(...Object.values(o));let bars='';
-    for(let d=1;d<=nd;d++){const v=o[ym+'-'+pad(d)]||0;bars+=`<div title="${d}: ${fmt(v)}"><i style="height:${100*v/mx*.8}%"></i>${d}</div>`}
+  if(!ds.length)body=`<p class="empty">Nenhum estudo registrado ${r.mode==='month'?'em':'no período de'} ${title}.</p>`;
+  else{const p=periods(l),top=Object.keys(p).sort((a,b)=>p[b]-p[a])[0],best=ds.slice().sort((a,b)=>o[b]-o[a])[0];
+    // barras por dia ou por semana (escolha do usuário), em qualquer período
+    const gr=r.mode==='week'?'d':RP.grp,bk=[],ix={},WD=['dom','seg','ter','qua','qui','sex','sáb'],y2=r.from.getFullYear()!==r.to.getFullYear();
+    for(let i=0;i<nd;i++){const d=addD(r.from,i),k=dk(d.getTime());let id,lb,tt;
+      if(gr==='d'){id=k;lb=nd<=7?WD[d.getDay()]:nd<=31?d.getDate():pad(d.getDate())+'/'+pad(d.getMonth()+1);tt=pad(d.getDate())+'/'+pad(d.getMonth()+1)+(y2?'/'+d.getFullYear():'')}
+      else{const m=addD(d,-((d.getDay()+6)%7));id=dk(m.getTime());lb=pad(m.getDate())+'/'+pad(m.getMonth()+1);tt='Semana de '+lb+(y2?'/'+m.getFullYear():'')}
+      if(!(id in ix)){ix[id]=bk.length;bk.push({lb,tt,v:0})}bk[ix[id]].v+=o[k]||0}
+    const mx=Math.max(...bk.map(x=>x.v)),st=bk.length>31?Math.ceil(bk.length/14):1,bars=bk.map((x,i)=>`<div title="${x.tt}: ${fmt(x.v)}"><i style="height:${100*x.v/mx*.8}%"></i>${i%st===0?x.lb:''}</div>`).join('');
     body=`<div class="stats">
-      <div class="stat"><small>Total no mês</small><b>${fmt(tot)}</b></div>
+      <div class="stat"><small>Total ${T}</small><b>${fmt(tot)}</b></div>
       <div class="stat"><small>Dias com estudo</small><b>${ds.length} de ${nd}</b></div>
       <div class="stat"><small>Média por dia ativo</small><b>${fmt(tot/ds.length)}</b></div>
-      <div class="stat"><small>Melhor dia</small><b>${+best.slice(8)} · ${fmt(o[best])}</b></div></div>
+      <div class="stat"><small>Melhor dia</small><b>${best.slice(8)}/${best.slice(5,7)} · ${fmt(o[best])}</b></div></div>
     <p class="hl">Seu período de maior atividade foi a <b>${PN[top].toLowerCase()}</b>, com <b>${fmt(p[top])}</b> (${Math.round(100*p[top]/tot)}% do total).</p>
     <div class="pers">${Object.keys(p).map(k=>`<div class="per${k===top?' top':''}"><small>${PN[k]} · ${PR[k]}</small><b>${fmt(p[k])}</b><small>${Math.round(100*p[k]/tot)}%</small></div>`).join('')}</div>
-    <h3>Minutos por dia</h3><div class="days">${bars}</div>`}
-  return `<div class="nav"><h2>${title}</h2>${nav()}</div>${body}`}
+    <h3>Tempo por ${gr==='w'?'semana':'dia'}</h3><div class="days${bk.length>31?' dense':''}">${bars}</div>`}
+  return `${rpBar(r)}<div class="nav"><h2>${title}</h2>${nav()}</div>${body}`}
 
 function vHist(){const L=S.sessions.slice().sort((a,b)=>b.s-a.s),f=flash;flash='';
   let h='',cur='';
@@ -442,10 +503,14 @@ function paintAll(){paintTimer();renderView()}
 
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-tab]');if(t){tab=t.dataset.tab;renderView();return}
+  const rb=e.target.closest('[data-rp]');if(rb){setRP(rb.dataset.rp);return}
+  const rg=e.target.closest('[data-rg]');if(rg){RP.grp=rg.dataset.rg==='w'?'w':'d';rpSave();renderView();return}
   const a=e.target.closest('[data-act]');if(a){const n=+a.dataset.act;
+    if(tab==='month'&&RP.mode==='custom'){shiftCustom(n);return}
     if(n===0)A=new Date();
     else if(tab==='day')A=new Date(A.getFullYear(),A.getMonth(),A.getDate()+n);
     else if(tab==='week')A=new Date(A.getFullYear(),A.getMonth(),A.getDate()+7*n);
+    else if(tab==='month'&&RP.mode==='week')A=new Date(A.getFullYear(),A.getMonth(),A.getDate()+7*n);
     else A=new Date(A.getFullYear(),A.getMonth()+n,1);
     renderView();return}
   const sw=e.target.closest('[data-sw]');if(sw){setCol(sw.dataset.sw);return}
@@ -487,7 +552,7 @@ let n=0;
 function tick(){const t=S.t;
   if(t.running&&t.end-Date.now()<=0){complete();return}
   paintTimer();
-  if((t.running||S.c.running)&&++n%15===0&&(tab==='day'||tab==='week'||tab==='month'))renderView()}
+  if((t.running||S.c.running)&&++n%15===0&&(tab==='day'||tab==='week'||tab==='month')&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('.rp-cu')))renderView()}
 document.addEventListener('change',async e=>{const i=e.target;
   if(i.id==='o-snd'){S.cfg.snd=i.checked;save();pushCfg()}
   else if(i.id==='o-auto'){S.cfg.auto=i.checked;save();pushCfg()}

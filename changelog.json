@@ -1,8 +1,7 @@
 {
-  "title": "Novidade: relógio com fuso horário",
+  "title": "Ajustes no seletor do relatório",
   "notes": [
-    "Novo relógio abaixo do timer, com o fuso horário selecionado escrito no topo.",
-    "Botões rápidos para os fusos do Brasil: GMT−2, −3, −4 e −5.",
-    "Menu com os fusos horários do mundo; a escolha fica salva neste aparelho."
+    "Na opção Semana, o gráfico mostra sempre os dias; o seletor Dias/Semanas fica só em Mês e Personalizado.",
+    "Períodos acima de 300 dias com barras por dia agora exibem um aviso sugerindo agrupar por Semanas."
   ]
 }
