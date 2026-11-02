@@ -1,7 +1,6 @@
 {
-  "title": "Relatório: gráfico corrigido e opção Semana removida",
+  "title": "Nova versão disponível",
   "notes": [
-    "Gráfico do relatório refeito: as barras não cobrem mais as datas, com linhas de grade horizontais e verticais.",
-    "A opção Semana saiu do relatório (ela repetia a aba Semana); ficam Mês e Personalizado."
+    "Melhorias e correções."
   ]
 }
