@@ -14,7 +14,8 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
 .app{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start}
-@media(max-width:820px){.app{grid-template-columns:1fr}}
+@media(max-width:820px){.app{grid-template-columns:minmax(0,1fr)}}
+.app>*{min-width:0}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
 .timer{position:sticky;top:16px;text-align:center}
 @media(max-width:820px){.timer{position:static}}
@@ -36,21 +37,19 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--amber);outline-
 .side{display:flex;flex-direction:column;gap:20px;position:sticky;top:16px;max-height:calc(100vh - 32px);overflow-y:auto;padding:2px;margin:-2px}
 @media(max-width:820px){.side{position:static;max-height:none;overflow:visible}}
 .side .timer{position:static}
-.wclock{text-align:center}
-.wc-zone{margin:0 0 2px;font-weight:600;color:var(--blue);font-size:14px}
-.wc-off{margin:0 0 8px;font-size:12px;color:var(--mute)}
-.wc-time{font-size:44px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.05;margin:0}
-.wc-date{margin:6px 0 14px;font-size:13px;color:var(--mute)}
-.wc-date:first-letter{text-transform:uppercase}
-.wc-br{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
-.wc-br button{padding:6px 2px;font-size:13px;line-height:1.2;border:1px solid var(--line);background:transparent;border-radius:8px;font-weight:600}
-.wc-br button small{display:block;font-weight:400;font-size:10px;color:var(--mute)}
-.wc-br button:hover{background:var(--bg)}
-.wc-br button[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:var(--blue-t)}
-.wc-br button[aria-pressed="true"] small{color:var(--blue-t)}
-.wc-sel{text-align:left}
-.wc-sel label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
-.wc-sel select{font:inherit;width:100%;padding:8px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.wd{text-align:left}
+.wd-t{margin:0;font-weight:600;color:var(--blue);font-size:14px}
+.wd-s{margin:2px 0 14px;font-size:12px;color:var(--mute)}
+.wd-ring{position:relative;width:136px;height:136px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center}
+.wd-in{width:88px;height:88px;border-radius:50%;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15}
+.wd-in b{font-size:19px;font-variant-numeric:tabular-nums}.wd-in small{font-size:11px;color:var(--mute)}
+.wd-l{display:flex;flex-direction:column}
+.wd-i{display:grid;grid-template-columns:12px minmax(0,1fr) auto 38px;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--line);font-size:13px}
+.wd-i i{width:10px;height:10px;border-radius:50%;display:block}
+.wd-i span{min-width:0;overflow-wrap:anywhere}
+.wd-i b{font-variant-numeric:tabular-nums;font-weight:600}
+.wd-i em{font-style:normal;color:var(--mute);text-align:right;font-variant-numeric:tabular-nums}
+.wd-e{margin:6px 0 0;color:var(--mute);font-size:13px;text-align:center}
 .rp{margin-bottom:14px}
 .rp-seg{display:flex;flex-wrap:wrap;gap:6px}
 .rp-b{font:inherit;font-size:13px;font-weight:500;color:inherit;cursor:pointer;border:1px solid var(--line);background:transparent;border-radius:8px;padding:6px 12px}
@@ -79,8 +78,9 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--amber);outline-
 .rp-cu input{font:inherit;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
 .today{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);color:var(--mute);font-size:13px}
 .today b{color:var(--ink);font-size:17px}
-.tabs{display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid var(--line)}
-.tab{border:0;background:none;padding:9px 14px;font-weight:500;color:var(--mute);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs{display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;white-space:nowrap;border:0;background:none;padding:9px 14px;font-weight:500;color:var(--mute);border-bottom:2px solid transparent;margin-bottom:-1px}
 .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--amber);font-weight:600}
 .nav{display:flex;align-items:center;gap:8px;margin-bottom:14px}
 .nav h2{flex:1;margin:0;font-size:18px;text-transform:capitalize}
@@ -164,17 +164,22 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 .sl .nm{flex:1;min-width:0}.sl small{color:var(--mute);display:block}
 .legend{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:12px;font-size:12px;color:var(--mute)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
+.legend b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.cr-r{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.cr-h{font-size:11px;color:var(--mute);font-weight:600;padding-top:0}
+.cr-h span:not(:first-child){text-align:center}
+.cr-n{display:flex;align-items:center;gap:8px;min-width:0}.cr-n .dot{flex:none}.cr-n span:last-child{min-width:0;overflow-wrap:anywhere}
+.cr-in{font:inherit;width:100%;min-width:0;padding:7px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);text-align:right}
+.cr-v{text-align:right;font-variant-numeric:tabular-nums}
+.cr-d{text-align:center;font-weight:700;padding:7px 4px;border-radius:6px;font-variant-numeric:tabular-nums}
+.cr-ok{background:#2e7d57;color:#fff}.cr-bad{background:#c24444;color:#fff}.cr-na{color:var(--mute);font-weight:400}
+.cr-t{font-weight:700;border-bottom:0}
+@media(max-width:560px){.cr-r{gap:6px;font-size:13px}.cr-in{padding:6px}.tab{padding:9px 10px}}
 .legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
 .acctbox{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
 .acctbox .nm{flex:1;min-width:180px}.acctbox small{color:var(--mute);display:block;margin-top:2px}
 .hrsel{display:grid;grid-template-columns:1fr 1fr;gap:12px}.hrsel label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--mute)}.hrsel select{font:inherit;padding:8px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
 @media(prefers-reduced-motion:reduce){.bar i{transition:none}}
-.pl{display:flex;flex-direction:column;gap:10px}
-.pl-f{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--mute)}
-.pl-f input{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
-.pl-tk{display:flex;gap:8px}.pl-tk input{flex:1;min-width:0}.pl-tk .btn{padding:6px 12px}
-.pl-b{display:flex;flex-wrap:wrap;gap:10px}
-.pl .sum{margin:0}
 </style>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#121314">
@@ -225,20 +230,14 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
     </div>
     <div class="today">Hoje você estudou <b id="tday">0min</b></div>
   </aside>
-  <aside class="card wclock" id="wc" aria-label="Relógio com fuso horário">
-    <p class="wc-zone" id="wc-zone">Brasília</p>
-    <p class="wc-off" id="wc-off"></p>
-    <p class="wc-time" id="wc-time" role="timer" aria-live="off">--:--:--</p>
-    <p class="wc-date" id="wc-date"></p>
-    <div class="wc-br" id="wc-br" role="group" aria-label="Fusos horários do Brasil"></div>
-    <div class="wc-sel"><label for="wc-sel">Fuso horário</label><select id="wc-sel"></select></div>
-  </aside>
+  <aside class="card wd" id="wd" aria-label="Distribuição das matérias na semana selecionada"></aside>
   </div>
   <main>
     <div class="tabs" role="tablist" id="tabs">
       <button class="tab" role="tab" data-tab="day">Dia</button>
       <button class="tab" role="tab" data-tab="week">Semana</button>
       <button class="tab" role="tab" data-tab="month">Relatório</button>
+      <button class="tab" role="tab" data-tab="plan">Cronograma</button>
       <button class="tab" role="tab" data-tab="hist">Histórico</button>
       <button class="tab" role="tab" data-tab="set">Configurações</button>
     </div>
@@ -248,10 +247,11 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 <div id="tip" role="tooltip" hidden></div>
 <script>
 const K='pomodoro-estudo.v1';
+try{['pomodoro-clock-tz','pomodoro-sheet','pomodoro-sheet-unlock'].forEach(k=>localStorage.removeItem(k))}catch(e){}
 let S={sessions:[],cfg:{focus:25,brk:5},t:null,c:{acc:0,running:false},ui:'pomo',subjects:[],selSubj:'',mig:null,migSubj:null};
 try{const r=localStorage.getItem(K);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
 S.cfg=Object.assign({focus:25,brk:5,auto:false,snd:true,ntf:false,vol:80,dayStart:6,dayEnd:24},S.cfg);if(!(S.cfg.dayStart>=0&&S.cfg.dayEnd<=24&&S.cfg.dayEnd>S.cfg.dayStart)){S.cfg.dayStart=6;S.cfg.dayEnd=24}S.c=S.c||{acc:0,running:false};S.ui=S.ui||'pomo';S.subjects=S.subjects||[];S.selSubj=S.selSubj||'';
-const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}try{shQ()}catch(e){}};
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
 const dur=m=>(m==='focus'?S.cfg.focus:S.cfg.brk)*60000;
 if(!S.t)S.t={mode:'focus',rem:dur('focus'),running:false};
 const $=s=>document.querySelector(s);
@@ -378,7 +378,7 @@ function nav(){return `<button class="btn" data-act="-1" aria-label="Anterior">�
 
 function vWeek(){const wd=(A.getDay()+6)%7,st=new Date(A.getFullYear(),A.getMonth(),A.getDate()-wd);
   const l=segs(),o=byDay(l),N=['seg','ter','qua','qui','sex','sáb','dom'],days=[];
-  const bySub={};l.forEach(x=>{const k=x.sub||'_';(bySub[x.day]=bySub[x.day]||{})[k]=(bySub[x.day][k]||0)+(x.e-x.s)/6e4});
+  const bySub={};l.forEach(x=>{const k=sk(x);(bySub[x.day]=bySub[x.day]||{})[k]=(bySub[x.day][k]||0)+(x.e-x.s)/6e4});
   const order=S.subjects.map(x=>x.id).concat('_');
   for(let i=0;i<7;i++){const d=new Date(st.getFullYear(),st.getMonth(),st.getDate()+i);const k=dk(d.getTime());days.push({d,k,m:o[k]||0,n:N[i],parts:bySub[k]||{}})}
   const mx=Math.max(60,...days.map(x=>x.m)),tot=days.reduce((a,x)=>a+x.m,0),end=days[6].d;
@@ -386,7 +386,8 @@ function vWeek(){const wd=(A.getDay()+6)%7,st=new Date(A.getFullYear(),A.getMont
       lbl=sj?sj.name+(sj.area?' · '+sj.area:''):'Sem matéria',bg=sj?sj.color:'var(--blue)',
       dayLbl=cap(x.d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'short'}));
     return `<i class="seg2" tabindex="0" style="width:${100*min/mx}%;background:${bg}" data-sn="${esc(lbl)}" data-day="${esc(dayLbl)}" data-d="${fmt(min)}"></i>`}).join('');
-  const legend=S.subjects.length?`<div class="legend"><span><i style="background:var(--blue)"></i>Sem matéria</span>${S.subjects.map(x=>`<span><i style="background:${x.color}"></i>${esc(x.name)}</span>`).join('')}</div>`:'';
+  const wt={};days.forEach(d=>{for(const id in d.parts)wt[id]=(wt[id]||0)+d.parts[id]});
+  const legend=S.subjects.length?`<div class="legend"><span><i style="background:var(--blue)"></i>Sem matéria <b>${fmt(wt._||0)}</b></span>${S.subjects.map(x=>`<span><i style="background:${x.color}"></i>${esc(x.name)} <b>${fmt(wt[x.id]||0)}</b></span>`).join('')}</div>`:'';
   return `<div class="nav"><h2>${st.toLocaleDateString('pt-BR',{day:'numeric',month:'short'})} – ${end.toLocaleDateString('pt-BR',{day:'numeric',month:'short'})}</h2>${nav()}</div>
   ${days.map(x=>`<div class="wk${x.k===dk(Date.now())?' hoje':''}"><span class="n">${x.n}</span><div class="t">${x.m?bar(x):''}</div><span class="v">${x.m?fmt(x.m):'—'}</span></div>`).join('')}
   <p class="sum">Total da semana: <b>${fmt(tot)}</b> · média por dia: <b>${fmt(tot/7)}</b></p>${legend}`}
@@ -520,21 +521,63 @@ function vSet(){const c=S.cfg;
   const acctSec=acct.mode==='in'
     ?`<div class="acctbox"><div class="nm"><b>${String(acct.email||'').replace(/[<>&"]/g,'')}</b><small>${acct.err?'Erro de sincronização':acct.pending?'Sincronizando…':acct.fromCache?'Offline — sincroniza ao reconectar':'Sincronizado'}</small></div><button class="btn" data-switch>Trocar de conta</button><button class="btn" data-logout>Sair</button></div>`
     :`<div class="acctbox"><div class="nm"><b>Sem conta</b><small>Os registros ficam só neste aparelho.</small></div><button class="btn main" data-login>Entrar para sincronizar</button></div>`;
-  return `<div class="nav"><h2 data-sh-unlock>Configurações</h2></div><h3 class="sec">Conta</h3>${acctSec}<h3 class="sec">Avisos</h3>
+  return `<div class="nav"><h2>Configurações</h2></div><h3 class="sec">Conta</h3>${acctSec}<h3 class="sec">Avisos</h3>
   <label class="opt"><input type="checkbox" id="o-snd" ${c.snd?'checked':''}>Tocar som quando o período mudar</label>
   <div class="opt"><label for="o-vol">Volume</label><input type="range" id="o-vol" min="0" max="100" value="${c.vol}"><span id="volv">${c.vol}%</span></div>
   <label class="opt"><input type="checkbox" id="o-ntf" ${c.ntf?'checked':''}>Mostrar notificação do navegador</label>
   <p class="er">${ntfMsg}</p>
   <label class="opt"><input type="checkbox" id="o-auto" ${c.auto?'checked':''}>Iniciar o próximo período automaticamente</label>
   <h4 class="sub">Sons</h4>${row('focus','Início do foco')}${row('break','Início da pausa')}
-  <p class="er">${sndMsg}</p><p class="sum">Os arquivos ficam guardados neste navegador (até 10 MB cada). Sem arquivo, toca um bipe padrão.</p><h3 class="sec">Registros diários</h3><div class="hrsel"><label>Início do dia${hourSel('o-ds',0,23,c.dayStart)}</label><label>Fim do dia${hourSel('o-de',1,24,c.dayEnd)}</label></div><p class="sum">Define o intervalo de horas mostrado na aba Dia. Registros fora dele continuam salvos e contam nos totais.</p><h3 class="sec">Matérias</h3>${subjUI()}${shVisible()?`<h3 class="sec">Planilha</h3>${shSec()}`:''}`}
+  <p class="er">${sndMsg}</p><p class="sum">Os arquivos ficam guardados neste navegador (até 10 MB cada). Sem arquivo, toca um bipe padrão.</p><h3 class="sec">Registros diários</h3><div class="hrsel"><label>Início do dia${hourSel('o-ds',0,23,c.dayStart)}</label><label>Fim do dia${hourSel('o-de',1,24,c.dayEnd)}</label></div><p class="sum">Define o intervalo de horas mostrado na aba Dia. Registros fora dele continuam salvos e contam nos totais.</p><h3 class="sec">Matérias</h3>${subjUI()}`}
 
-function renderView(){$('#view').innerHTML={day:vDay,week:vWeek,month:vMonth,hist:vHist,set:vSet}[tab]();
-  document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab))}
+/* ===== Painel: distribuição das matérias na semana selecionada ===== */
+const sk=x=>x.sub&&S.subjects.some(y=>y.id===x.sub)?x.sub:'_';
+function weekData(st){const a=dk(st.getTime()),b=dk(new Date(st.getFullYear(),st.getMonth(),st.getDate()+6).getTime()),m={};
+  segs().forEach(x=>{if(x.day<a||x.day>b)return;const k=sk(x);m[k]=(m[k]||0)+(x.e-x.s)/6e4});return m}
+function paintDist(){const el=$('#wd');if(!el)return;
+  const st=new Date(A.getFullYear(),A.getMonth(),A.getDate()-((A.getDay()+6)%7)),en=new Date(st.getFullYear(),st.getMonth(),st.getDate()+6),
+    f=d=>d.toLocaleDateString('pt-BR',{day:'numeric',month:'short'}),m=weekData(st);
+  const items=S.subjects.map(x=>({n:x.name,c:x.color,v:m[x.id]||0})).concat([{n:'Sem matéria',c:'var(--blue)',v:m._||0}]).filter(x=>x.v>0).sort((a,b)=>b.v-a.v),
+    tot=items.reduce((a,x)=>a+x.v,0);
+  let body;
+  if(!tot)body='<p class="wd-e">Nenhum estudo registrado nesta semana.</p>';
+  else{let acc=0;const stops=items.map(x=>{const a=acc/tot*100;acc+=x.v;return `${x.c} ${a}% ${acc/tot*100}%`}).join(',');
+    body=`<div class="wd-ring" role="img" aria-label="Distribuição das matérias na semana" style="background:conic-gradient(${stops})"><div class="wd-in"><b>${fmt(tot)}</b><small>na semana</small></div></div>
+    <div class="wd-l">${items.map(x=>`<div class="wd-i"><i style="background:${x.c}"></i><span>${esc(x.n)}</span><b>${fmt(x.v)}</b><em>${Math.round(100*x.v/tot)}%</em></div>`).join('')}</div>`}
+  el.innerHTML=`<p class="wd-t">Distribuição da semana</p><p class="wd-s">${f(st)} – ${f(en)}</p>${body}`}
+
+/* ===== Cronograma: carga horária prevista x cumprida ===== */
+let planMsg='';
+const typing=()=>{const a=document.activeElement;return !!(a&&a.classList&&a.classList.contains('cr-in'))};
+// Aceita 60 / 60h (horas), 1h30 / 1:30, 90min / 90m. Vazio ou 0 = sem previsão. Inválido = null.
+function parseCH(s){s=String(s).trim().toLowerCase().replace(',','.').replace(/\s+/g,'');if(!s)return 0;let m,v;
+  if(m=s.match(/^(\d+(?:\.\d+)?)h?$/))v=parseFloat(m[1])*60;
+  else if(m=s.match(/^(\d+)(?:h|:)(\d{1,2})(?:m|min)?$/)){if(+m[2]>59)return null;v=+m[1]*60+ +m[2]}
+  else if(m=s.match(/^(\d+(?:\.\d+)?)(?:m|min)$/))v=parseFloat(m[1]);
+  else return null;
+  v=Math.round(v);return v<=600000?v:null}
+function diffCell(plan,done){if(!(plan>0))return '<span class="cr-d cr-na">—</span>';
+  const d=Math.round(done)-plan,ok=d>=0;return `<span class="cr-d ${ok?'cr-ok':'cr-bad'}">${ok?'+':'-'}${fmt(Math.abs(d))}</span>`}
+function vPlan(){const m={};segs().forEach(x=>{if(x.sub)m[x.sub]=(m[x.sub]||0)+(x.e-x.s)/6e4});
+  const head='<div class="nav"><h2>Cronograma</h2></div>';
+  if(!S.subjects.length)return head+'<p class="empty">Cadastre as matérias em Configurações para montar o cronograma.</p>';
+  let tp=0,td=0;
+  const rows=S.subjects.map(x=>{const p=x.plan>0?x.plan:0,d=m[x.id]||0;if(p){tp+=p;td+=d}
+    return `<div class="cr-r"><div class="cr-n"><span class="dot" style="background:${x.color}"></span><span>${esc(x.name)}</span></div><input class="cr-in" type="text" autocomplete="off" maxlength="9" placeholder="ex.: 60h" value="${p?fmt(p):''}" data-id="${x.id}" aria-label="Carga horária prevista de ${esc(x.name)}"><span class="cr-v">${fmt(d)}</span>${diffCell(p,d)}</div>`}).join('');
+  const total=tp?`<div class="cr-r cr-t"><span>Total</span><span class="cr-v">${fmt(tp)}</span><span class="cr-v">${fmt(td)}</span>${diffCell(tp,td)}</div>`:'';
+  return `${head}<div class="cr-r cr-h"><span>Matéria</span><span>CH Prevista</span><span>CH Cumprida</span><span>Diferença</span></div>${rows}${total}
+  <p class="er" role="alert">${esc(planMsg)}</p>
+  <p class="sum">Digite a CH prevista de cada matéria (ex.: <b>60</b> ou <b>60h</b> = horas; <b>1h30</b>; <b>90min</b>). A CH cumprida soma todos os registros da matéria e a diferença é cumprida − prevista: <b>+</b> em verde quando bateu ou passou a meta, <b>-</b> em vermelho quando falta. O total considera só as matérias com previsão.</p>`}
+
+function renderView(force){if(!force&&tab==='plan'&&typing())return;
+  $('#view').innerHTML={day:vDay,week:vWeek,month:vMonth,plan:vPlan,hist:vHist,set:vSet}[tab]();
+  document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab));
+  paintDist()}
+function centerTab(){const s=document.querySelector('.tab[aria-selected="true"]'),w=$('#tabs');if(s&&w&&w.scrollWidth>w.clientWidth)w.scrollLeft=s.offsetLeft-(w.clientWidth-s.offsetWidth)/2}
 function paintAll(){paintTimer();renderView()}
 
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-tab]');if(t){tab=t.dataset.tab;renderView();return}
+  const t=e.target.closest('[data-tab]');if(t){tab=t.dataset.tab;planMsg='';renderView();centerTab();return}
   const rb=e.target.closest('[data-rp]');if(rb){setRP(rb.dataset.rp);return}
   const rg=e.target.closest('[data-rg]');if(rg){RP.grp=rg.dataset.rg==='w'?'w':'d';rpSave();renderView();return}
   const a=e.target.closest('[data-act]');if(a){const n=+a.dataset.act;
@@ -573,6 +616,11 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
   if(b){const r=b.getBoundingClientRect();showTip(b,r.left+r.width/2,r.top);e.stopPropagation()}
   else if(!tip.hidden)tip.hidden=true});
 document.addEventListener('change',e=>{if(e.target.id==='subjsel'){S.selSubj=e.target.value;save()}});
+document.addEventListener('change',e=>{const i=e.target;if(!i.classList||!i.classList.contains('cr-in'))return;
+  const x=S.subjects.find(y=>y.id===i.dataset.id);if(!x)return;
+  const v=parseCH(i.value);
+  if(v===null){planMsg='Não entendi "'+i.value.trim()+'". Use formatos como 60, 60h, 1h30 ou 90min.';renderView(true);return}
+  planMsg='';x.plan=v;updSubj(x);renderView(true)});
 document.addEventListener('input',e=>{const i=e.target,id=i.id,rgb=['s-r','s-g','s-b'];
   if(id==='o-vol'){S.cfg.vol=+i.value;$('#volv').textContent=S.cfg.vol+'%';save();return}
   if(id==='s-name')draft.name=i.value;else if(id==='s-area')draft.area=i.value;
@@ -583,7 +631,7 @@ let n=0;
 function tick(){const t=S.t;
   if(t.running&&t.end-Date.now()<=0){complete();return}
   paintTimer();
-  if((t.running||S.c.running)&&++n%15===0&&(tab==='day'||tab==='week'||tab==='month')&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('.rp-cu')))renderView()}
+  if((t.running||S.c.running)&&++n%15===0){paintDist();if((tab==='day'||tab==='week'||tab==='month'||tab==='plan')&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('.rp-cu')))renderView()}}
 document.addEventListener('change',async e=>{const i=e.target;
   if(i.id==='o-snd'){S.cfg.snd=i.checked;save();pushCfg()}
   else if(i.id==='o-auto'){S.cfg.auto=i.checked;save();pushCfg()}
@@ -667,149 +715,6 @@ if('serviceWorker' in navigator){
   });
 }
 if(tab==='day'){const g=document.querySelector('.grid');}
-/* ===== Sincronização com a planilha (Google Sheets) ===== */
-var SHK='pomodoro-sheet',SHS=(function(){const d={url:'',token:'',auto:true,last:0,n:0,hash:'',err:'',pend:false,conf:true};try{return Object.assign(d,JSON.parse(localStorage.getItem(SHK)||'{}'))}catch(e){return d}})(),shT=null,shBusy=false,shAgain=false,shMsg='',shMsgOk=false;
-function shSave(){try{localStorage.setItem(SHK,JSON.stringify(SHS))}catch(e){}}
-// Uma linha por dia + matéria, com os minutos somados (sessões que viram a meia-noite são divididas).
-function shRows(){
-  const nm={};S.subjects.forEach(x=>nm[x.id]=String(x.name||'').trim());
-  const g={};
-  S.sessions.forEach(x=>{
-    let s=x.s;const e=x.e,sub=(x.sub&&nm[x.sub])||'Sem matéria';
-    while(s<e){
-      const d=new Date(s),n=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1).getTime(),y=Math.min(e,n),day=dk(s),key=day+'|'+sub;
-      const r=g[key]||(g[key]={day,sub,ms:0,f:s});r.ms+=y-s;if(s<r.f)r.f=s;s=y}
-  });
-  return Object.values(g).map(r=>[r.day,r.sub,Math.round(r.ms/6e4),r.f]).filter(r=>r[2]>0)
-    .sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:a[3]-b[3]).map(r=>[r[0],r[1],r[2]])}
-function shStatus(){
-  if(!SHS.url||!SHS.token)return'Preencha a URL e o token para começar.';
-  if(shBusy)return'Enviando…';
-  if(SHS.err)return'Erro: '+SHS.err;
-  if(SHS.pend)return'Pendente: envia quando houver conexão.';
-  if(SHS.last){const d=new Date(SHS.last),hoje=dk(d)===dk(Date.now());
-    return'Sincronizado '+(hoje?'às '+hm(SHS.last):'em '+d.toLocaleDateString('pt-BR')+' às '+hm(SHS.last))+' · '+SHS.n+(SHS.n===1?' linha':' linhas')+(SHS.conf===false?' (sem confirmação do script)':'')}
-  return'Ainda não sincronizado.'}
-function shPaint(){const st=$('#sh-st'),m=$('#sh-msg');if(st)st.textContent=shStatus();if(m){m.textContent=shMsg;m.className='er'+(shMsgOk?' ok':'')}}
-function shSec(){const c=SHS;
-  return`<div class="pl">
-  <label class="pl-f">Endereço do script (URL)<input type="url" id="sh-url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(c.url)}"></label>
-  <label class="pl-f">Token<span class="pl-tk"><input type="password" id="sh-tok" autocomplete="off" spellcheck="false" value="${esc(c.token)}"><button type="button" class="btn" data-sh-eye>Mostrar</button></span></label>
-  <label class="opt"><input type="checkbox" id="sh-auto" ${c.auto?'checked':''}>Enviar para a planilha sempre que o histórico mudar</label>
-  <div class="pl-b"><button type="button" class="btn" data-sh-test>Testar conexão</button><button type="button" class="btn main" data-sh-now>Sincronizar agora</button></div>
-  <p class="${shMsgOk?'er ok':'er'}" id="sh-msg" role="status">${esc(shMsg)}</p>
-  <p class="sum" id="sh-st">${esc(shStatus())}</p>
-  <p class="sum">A URL e o token ficam guardados só neste aparelho. Os nomes das matérias precisam ser iguais aos da tabela da planilha.</p></div>`}
-// Tenta ler a resposta do script; se o navegador bloquear a leitura, reenvia sem ler (o envio é idempotente).
-async function shPost(url,payload){
-  const opt={method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)};
-  if(window.AbortSignal&&AbortSignal.timeout)opt.signal=AbortSignal.timeout(30000);
-  let r;
-  try{r=await fetch(url,opt)}
-  catch(e){if(!navigator.onLine)throw e;
-    const o2={...opt,mode:'no-cors'};if(window.AbortSignal&&AbortSignal.timeout)o2.signal=AbortSignal.timeout(30000);
-    await fetch(url,o2);return{ok:true,conf:false}}
-  let j;try{j=await r.json()}catch(e){return{ok:false,erro:'resposta inválida do script. Confira se a implantação permite acesso a "Qualquer pessoa".'}}
-  return{ok:!!j.ok,erro:j.erro,n:j.n,conf:true}}
-async function shRun(force,allowEmpty){
-  if(!SHS.url||!SHS.token)return;
-  if(shBusy){shAgain=true;return}
-  const rows=shRows();
-  if(!rows.length&&!allowEmpty)return; // nunca esvazia a planilha automaticamente (ex.: aparelho novo ainda sem dados)
-  const h=JSON.stringify(rows);
-  if(!force&&h===SHS.hash&&!SHS.err&&!SHS.pend)return;
-  if(!navigator.onLine){SHS.pend=true;shSave();shPaint();return}
-  shBusy=true;shPaint();
-  try{
-    const r=await shPost(SHS.url,{token:SHS.token,rows});
-    if(r.ok){SHS.hash=h;SHS.last=Date.now();SHS.n=rows.length;SHS.err='';SHS.pend=false;SHS.conf=r.conf}
-    else SHS.err=r.erro==='token'?'token incorreto.':(r.erro||'falha no script.')
-  }catch(e){SHS.pend=true;SHS.err=''}
-  shBusy=false;shSave();shPaint();
-  if(shAgain){shAgain=false;shQ()}}
-function shQ(){
-  if(!SHS||!SHS.url||!SHS.token||!SHS.auto)return;
-  clearTimeout(shT);shT=setTimeout(()=>shRun(false),5000)}
-function shRead(){const u=$('#sh-url'),t=$('#sh-tok');
-  if(u&&u.value.trim()!==SHS.url){SHS.url=u.value.trim();SHS.hash=''}
-  if(t)SHS.token=t.value.trim();
-  shSave()}
-async function shTest(){
-  shRead();
-  const url=SHS.url,token=SHS.token;
-  shMsgOk=false;
-  if(!/^https:\/\/script\.google\.com\/.+\/exec$/.test(url)){shMsg='A URL deve começar com https://script.google.com/ e terminar em /exec.';shPaint();return}
-  if(!token){shMsg='Informe o token.';shPaint();return}
-  shMsg='Testando…';shPaint();
-  try{
-    const r=await shPost(url,{token,test:true});
-    if(r.ok&&r.conf){shMsg='Conexão funcionando: a planilha respondeu.';shMsgOk=true}
-    else if(r.ok){shMsg='O envio saiu, mas o navegador não deixou ler a resposta. Use "Sincronizar agora" e confira a aba Registro.'}
-    else shMsg=r.erro==='token'?'Token incorreto. Ele precisa ser igual ao TOKEN do script.':'Falha: '+(r.erro||'o script não aceitou o teste.')+' (Atualizou o código do script e reimplantou?)'
-  }catch(e){shMsg='Sem conexão com a internet ou endereço inacessível.'}
-  shPaint()}
-async function shNow(){
-  shRead();
-  if(!SHS.url||!SHS.token){shMsg='Preencha a URL e o token.';shMsgOk=false;shPaint();return}
-  if(!S.sessions.length&&!confirm('Não há registros neste aparelho. Enviar assim esvazia a aba Registro da planilha. Continuar?'))return;
-  shMsg='';shPaint();
-  await shRun(true,true);
-  shMsgOk=!SHS.err&&!SHS.pend;shMsg=SHS.err?'':SHS.pend?'Sem conexão. O envio fica pendente.':'Histórico enviado.';shPaint()}
-document.addEventListener('click',e=>{
-  const eye=e.target.closest('[data-sh-eye]');
-  if(eye){const i=$('#sh-tok');if(i){const show=i.type==='password';i.type=show?'text':'password';eye.textContent=show?'Ocultar':'Mostrar'}return}
-  if(e.target.closest('[data-sh-test]')){shTest();return}
-  if(e.target.closest('[data-sh-now]')){shNow()}});
-document.addEventListener('change',e=>{const i=e.target;
-  if(i.id==='sh-url'||i.id==='sh-tok'){SHS.err='';shRead();shQ();shPaint()}
-  else if(i.id==='sh-auto'){SHS.auto=i.checked;shSave();if(i.checked)shQ()}});
-window.addEventListener('online',()=>{if(SHS.pend)shQ()});
-// A seção fica oculta até ser liberada neste aparelho: toque 5 vezes no título "Configurações".
-var SHU='pomodoro-sheet-unlock',shTaps=0,shTapT=0;
-function shVisible(){try{return localStorage.getItem(SHU)==='1'||!!SHS.url}catch(e){return!!SHS.url}}
-document.addEventListener('click',e=>{
-  if(!e.target.closest('[data-sh-unlock]'))return;
-  const now=Date.now();shTaps=now-shTapT<1500?shTaps+1:1;shTapT=now;
-  if(shTaps>=5){shTaps=0;try{localStorage.setItem(SHU,'1')}catch(x){}renderView()}});
-shQ();
-/* ===== Relógio com fuso horário ===== */
-(()=>{
-  const TZK='pomodoro-clock-tz',DEF='America/Sao_Paulo';
-  const BR=[{z:'America/Noronha',g:'GMT−2',n:'Noronha'},{z:'America/Sao_Paulo',g:'GMT−3',n:'Brasília'},{z:'America/Manaus',g:'GMT−4',n:'Manaus'},{z:'America/Rio_Branco',g:'GMT−5',n:'Acre'}];
-  const BRN={};BR.forEach(b=>BRN[b.z]=b.n);
-  const ok=z=>{try{new Intl.DateTimeFormat('pt-BR',{timeZone:z});return true}catch(e){return false}};
-  let tz=DEF;try{const v=localStorage.getItem(TZK);if(v&&ok(v))tz=v}catch(e){}
-  const el=id=>document.getElementById(id),selE=el('wc-sel'),brE=el('wc-br');
-  const off=(z,d)=>{try{const p=new Intl.DateTimeFormat('en-US',{timeZone:z,timeZoneName:'shortOffset'}).formatToParts(d||new Date()).find(x=>x.type==='timeZoneName');return(p?p.value:'GMT').replace('-','−')}catch(e){return'GMT'}};
-  const nice=z=>BRN[z]||z.split('/').slice(1).join(' / ').replace(/_/g,' ')||z;
-  let zones=[];try{zones=Intl.supportedValuesOf('timeZone')}catch(e){}
-  if(!zones.length)zones=['Pacific/Midway','Pacific/Honolulu','America/Anchorage','America/Los_Angeles','America/Denver','America/Chicago','America/New_York','America/Halifax','America/Noronha','America/Sao_Paulo','America/Manaus','America/Rio_Branco','America/Argentina/Buenos_Aires','Atlantic/Azores','Europe/Lisbon','Europe/London','Europe/Paris','Europe/Berlin','Europe/Athens','Europe/Moscow','Africa/Cairo','Africa/Johannesburg','Africa/Lagos','Asia/Dubai','Asia/Karachi','Asia/Kolkata','Asia/Dhaka','Asia/Bangkok','Asia/Shanghai','Asia/Tokyo','Australia/Sydney','Pacific/Auckland'];
-  if(!zones.includes('UTC'))zones=['UTC'].concat(zones);
-  if(!zones.includes(tz))zones.push(tz);
-  // dropdown agrupado por continente, com o deslocamento atual de cada fuso
-  const now0=new Date(),groups={};
-  zones.forEach(z=>{const g=z==='UTC'?'UTC':z.split('/')[0];(groups[g]=groups[g]||[]).push(z)});
-  Object.keys(groups).sort((a,b)=>a==='UTC'?-1:b==='UTC'?1:a.localeCompare(b)).forEach(g=>{
-    const og=document.createElement('optgroup');og.label=g==='UTC'?'UTC':g;
-    groups[g].forEach(z=>{const o=document.createElement('option');o.value=z;o.textContent=(z==='UTC'?'UTC':nice(z))+' ('+off(z,now0)+')';og.appendChild(o)});
-    selE.appendChild(og)});
-  BR.forEach(b=>{const bt=document.createElement('button');bt.type='button';bt.dataset.z=b.z;bt.innerHTML=b.g+'<small>'+b.n+'</small>';bt.title=b.n+' ('+b.g+')';brE.appendChild(bt)});
-  let fT,fD;
-  const mk=()=>{fT=new Intl.DateTimeFormat('pt-BR',{timeZone:tz,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-    fD=new Intl.DateTimeFormat('pt-BR',{timeZone:tz,weekday:'long',day:'numeric',month:'long'})};
-  const tick=()=>{const d=new Date();el('wc-time').textContent=fT.format(d);el('wc-date').textContent=fD.format(d)};
-  const paint=()=>{
-    mk();selE.value=tz;
-    el('wc-zone').textContent=nice(tz);
-    el('wc-off').textContent=tz==='UTC'?'UTC':tz+' · '+off(tz);
-    brE.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.z===tz)));
-    tick()};
-  const setTz=z=>{if(!ok(z))return;tz=z;try{localStorage.setItem(TZK,z)}catch(e){}paint()};
-  selE.addEventListener('change',()=>setTz(selE.value));
-  brE.addEventListener('click',e=>{const b=e.target.closest('button[data-z]');if(b)setTz(b.dataset.z)});
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick()});
-  paint();setInterval(tick,1000);
-})();
 </script>
 <script type="module">
 import{initializeApp}from'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
@@ -845,7 +750,7 @@ else{
       set:o=>setDoc(doc(sc,o.id),T(o.s,o.e,o.k,o.sub)).catch(console.error),
       del:id=>deleteDoc(doc(sc,id)).catch(console.error),
       cfg:c=>setDoc(cd,c).catch(console.error),
-      subjSet:o=>setDoc(doc(jc,o.id),{name:o.name,area:o.area||'',color:o.color}).catch(console.error),
+      subjSet:o=>setDoc(doc(jc,o.id),{name:o.name,area:o.area||'',color:o.color,plan:o.plan>0?o.plan:0}).catch(console.error),
       subjDel:id=>deleteDoc(doc(jc,id)).catch(console.error)
     });
     let first=true;
@@ -866,7 +771,7 @@ else{
       if(firstSubj){firstSubj=false;
         if(migSubjKey()!==u.uid){
           const ids=new Set(arr.map(x=>x.id)),extra=localSubjects().filter(x=>!ids.has(x.id));
-          for(let i=0;i<extra.length;i+=400){const b=writeBatch(db);extra.slice(i,i+400).forEach(x=>b.set(doc(jc,x.id),{name:x.name,area:x.area||'',color:x.color}));b.commit().catch(console.error)}
+          for(let i=0;i<extra.length;i+=400){const b=writeBatch(db);extra.slice(i,i+400).forEach(x=>b.set(doc(jc,x.id),{name:x.name,area:x.area||'',color:x.color,plan:x.plan>0?x.plan:0}));b.commit().catch(console.error)}
           arr.push(...extra);setMigSubj(u.uid)}}
       applySubjects(arr);
     }));
