@@ -1,10 +1,9 @@
 {
-  "title": "Novidades da versão",
+  "title": "Versão 2.0",
   "notes": [
-    "Relógio mundial removido por completo. No lugar, um painel mostra a distribuição das matérias na semana selecionada na aba Semana (gráfico em anel, horas e porcentagem por matéria).",
-    "Integração com a planilha do Google removida por completo, junto com a seção \"Planilha\" das Configurações.",
-    "Aba Semana: a legenda agora mostra, ao lado de cada matéria, o total de horas estudadas na semana.",
-    "Nova aba Cronograma: defina a Carga Horária Prevista de cada matéria (ex.: 60h, 1h30, 90min). A Carga Horária Cumprida é somada automaticamente dos registros e a Diferença aparece em verde com \"+\" quando a meta é batida ou superada, e em vermelho com \"-\" quando falta tempo.",
-    "A Carga Horária Prevista sincroniza entre seus aparelhos junto com as matérias."
+    "Novo: notificação da sessão em andamento no celular, com o nome da matéria e o tempo restante (pomodoro) ou decorrido (cronômetro). Ative em Configurações > Avisos.",
+    "Aviso de fim de período mais insistente: fica na tela até você tocar, com som e vibração quando o sistema permitir.",
+    "Para o aviso aparecer com o Não perturbe ligado, adicione o navegador ou o app às exceções do sistema (veja a dica em Configurações).",
+    "O relógio agora roda em segundo plano sem atrasos, para o aviso de fim de período chegar na hora."
   ]
 }
