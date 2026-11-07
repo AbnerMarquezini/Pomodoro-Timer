@@ -1,6 +1,6 @@
 // Suba de versão a CADA atualização publicada — é o que faz o navegador notar
 // que existe algo novo. Sem isso, nenhum aparelho detecta a atualização.
-const CACHE_NAME='pomodoro-v18';
+const CACHE_NAME='pomodoro-v19';
 const SHELL=['./','index.html','manifest.json','icon-192.png','icon-512.png','changelog.json'];
 
 self.addEventListener('install',e=>{
@@ -20,6 +20,31 @@ self.addEventListener('activate',e=>{
 // A página manda essa mensagem quando o usuário confirma a atualização.
 self.addEventListener('message',e=>{
   if(e.data==='SKIP_WAITING')self.skipWaiting();
+});
+
+// Clique numa notificação: foca o app já aberto ou abre uma nova janela.
+// A notificação da sessão em andamento (data.live) continua na barra; a de
+// fim de período some ao ser tocada.
+self.addEventListener('notificationclick',e=>{
+  const live=e.notification.data&&e.notification.data.live;
+  if(!live)e.notification.close();
+  e.waitUntil(
+    self.clients.matchAll({type:'window',includeUncontrolled:true}).then(list=>{
+      for(const c of list){if('focus' in c)return c.focus()}
+      return self.clients.openWindow('./');
+    })
+  );
+});
+
+// Se o usuário dispensar a notificação da sessão em andamento, avisa a página
+// para não reabri-la a cada atualização.
+self.addEventListener('notificationclose',e=>{
+  if(!(e.notification.data&&e.notification.data.live))return;
+  e.waitUntil(
+    self.clients.matchAll({type:'window',includeUncontrolled:true}).then(list=>{
+      list.forEach(c=>c.postMessage({type:'live-closed'}));
+    })
+  );
 });
 
 self.addEventListener('fetch',e=>{

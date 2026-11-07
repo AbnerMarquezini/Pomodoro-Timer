@@ -250,7 +250,7 @@ const K='pomodoro-estudo.v1';
 try{['pomodoro-clock-tz','pomodoro-sheet','pomodoro-sheet-unlock'].forEach(k=>localStorage.removeItem(k))}catch(e){}
 let S={sessions:[],cfg:{focus:25,brk:5},t:null,c:{acc:0,running:false},ui:'pomo',subjects:[],selSubj:'',mig:null,migSubj:null};
 try{const r=localStorage.getItem(K);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
-S.cfg=Object.assign({focus:25,brk:5,auto:false,snd:true,ntf:false,vol:80,dayStart:6,dayEnd:24},S.cfg);if(!(S.cfg.dayStart>=0&&S.cfg.dayEnd<=24&&S.cfg.dayEnd>S.cfg.dayStart)){S.cfg.dayStart=6;S.cfg.dayEnd=24}S.c=S.c||{acc:0,running:false};S.ui=S.ui||'pomo';S.subjects=S.subjects||[];S.selSubj=S.selSubj||'';
+S.cfg=Object.assign({focus:25,brk:5,auto:false,snd:true,ntf:false,live:false,vol:80,dayStart:6,dayEnd:24},S.cfg);if(!(S.cfg.dayStart>=0&&S.cfg.dayEnd<=24&&S.cfg.dayEnd>S.cfg.dayStart)){S.cfg.dayStart=6;S.cfg.dayEnd=24}S.c=S.c||{acc:0,running:false};S.ui=S.ui||'pomo';S.subjects=S.subjects||[];S.selSubj=S.selSubj||'';
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
 const dur=m=>(m==='focus'?S.cfg.focus:S.cfg.brk)*60000;
 if(!S.t)S.t={mode:'focus',rem:dur('focus'),running:false};
@@ -298,7 +298,52 @@ async function rmSnd(k){try{await idbSet(k,null)}catch(e){}if(SND[k]){URL.revoke
 (async()=>{for(const k of['focus','break']){try{const v=await idbGet(k);if(v)setSnd(k,v.f,v.name)}catch(e){}}if(tab==='set')renderView()})();
 function beep(k){try{const c=new AudioContext(),o=c.createOscillator(),g=c.createGain();g.gain.value=S.cfg.vol/100;o.connect(g);g.connect(c.destination);o.frequency.value=k==='break'?523:784;o.start();o.stop(c.currentTime+.45)}catch(e){}}
 function play(k,force){if(!S.cfg.snd&&!force)return;if(SND[k]){try{const a=new Audio(SND[k].url);a.volume=S.cfg.vol/100;a.play().catch(()=>beep(k))}catch(e){beep(k)}}else beep(k)}
-function cue(k){play(k);if(S.cfg.ntf&&window.Notification&&Notification.permission==='granted'){try{new Notification(k==='focus'?'Hora de estudar':'Hora da pausa',{body:k==='focus'?'Seu período de foco começou.':'Seu período de pausa começou.'})}catch(e){}}}
+/* ===== Notificações =====
+   Sempre pelo service worker (showNotification): é o caminho que o Android e o
+   Windows tratam como notificação "de verdade" do app instalado. Fallback: new Notification. */
+const isMobile=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)||(matchMedia('(pointer:coarse)').matches&&Math.min(screen.width,screen.height)<900);
+const notifOK=()=>!!(window.Notification&&Notification.permission==='granted');
+async function showNtf(title,opts){
+  try{const reg=await navigator.serviceWorker.getRegistration();if(reg){await reg.showNotification(title,opts);return true}}catch(e){}
+  try{new Notification(title,opts);return true}catch(e){}
+  return false}
+async function closeNtf(tag){
+  try{const reg=await navigator.serviceWorker.getRegistration();if(!reg)return;(await reg.getNotifications({tag})).forEach(n=>n.close())}catch(e){}}
+function cue(k){play(k);
+  // Fim de período: tag própria, com som/vibração e sem sumir sozinha. Marcada como
+  // alerta para o sistema; se o Windows (Assistência de foco/Não perturbe) ou o
+  // Android (Não perturbe) bloquear, só o usuário libera — veja o aviso em Configurações.
+  if(S.cfg.ntf&&notifOK()){
+    showNtf(k==='focus'?'Hora de estudar':'Hora da pausa',{
+      body:k==='focus'?'Seu período de foco começou.':'Seu período de pausa começou.',
+      tag:'pomodoro-fim',renotify:true,requireInteraction:true,silent:false,
+      vibrate:[250,120,250,120,250],icon:'icon-192.png',badge:'icon-192.png',data:{live:false}})}}
+
+/* ===== Notificação da sessão em andamento (somente celular) =====
+   Mostra matéria + tempo restante (pomodoro) ou decorrido (cronômetro). Web não tem
+   cronômetro nativo na notificação, então o texto é regravado a cada ~15 s enquanto o app
+   está ativo e traz também o horário de término/início, que continua correto mesmo com o
+   app em segundo plano e o texto congelado. */
+let liveSig='',liveAt=0,liveOn=false,liveDismissed=false,liveBusy=false;
+const clk=ms=>{const s=Math.max(0,Math.floor(ms/1000)),h=Math.floor(s/3600),m=Math.floor(s/60)%60;return(h?pad(h)+':':'')+pad(m)+':'+pad(s%60)};
+function liveInfo(){const now=Date.now(),sj=S.selSubj?S.subjects.find(y=>y.id===S.selSubj):null,nm=sj?sj.name:'Sem matéria';
+  if(S.c.running){const c=S.c,el=c.acc+now-c.segStart;
+    return{key:'c'+c.segStart,title:nm,body:'Cronômetro · decorrido '+clk(el)+'\nIniciado às '+hm(c.segStart)}}
+  if(S.t.running){const t=S.t,left=Math.max(0,t.end-now),foco=t.mode==='focus';
+    return{key:'p'+t.segStart+t.mode,title:foco?nm:'Pausa',body:(foco?'Foco':'Pausa')+' · restam '+clk(left)+'\nTermina às '+hm(t.end)+(foco?'':' · '+nm)}}
+  return null}
+async function liveUpdate(force){
+  if(!isMobile||liveBusy)return;
+  const info=S.cfg.live&&notifOK()?liveInfo():null;
+  if(!info){if(liveOn){liveOn=false;liveSig='';liveDismissed=false;closeNtf('pomodoro-live')}return}
+  if(liveSig!==info.key){liveSig=info.key;liveDismissed=false;force=true}
+  if(liveDismissed)return;
+  const now=Date.now();if(!force&&now-liveAt<15000)return;
+  liveBusy=true;liveAt=now;
+  try{liveOn=await showNtf(info.title,{body:info.body,tag:'pomodoro-live',renotify:false,silent:true,requireInteraction:true,
+    icon:'icon-192.png',badge:'icon-192.png',data:{live:true}})}finally{liveBusy=false}}
+if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.type==='live-closed'){liveDismissed=true;liveOn=false}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')liveUpdate(true)});
 
 function toggle(){const t=S.t,now=Date.now();
   if(t.running){if(t.mode==='focus')log(t.segStart,now);t.rem=t.end-now;t.running=false}
@@ -359,7 +404,8 @@ function paintTimer(){const t=S.t,cr=S.ui==='cron'||(S.ui==='man'&&S.c.running),
   paintSubjSel();
   document.title=(cr?S.c.running:t.running)?txt+' · '+ttl:'Pomodoro de estudo';
   const k=dk(now);$('#tday').textContent=fmt(mins(segs().filter(x=>x.day===k)));
-  $('#cf').disabled=$('#cb').disabled=t.running}
+  $('#cf').disabled=$('#cb').disabled=t.running;
+  liveUpdate()}
 
 function vDay(){const key=dk(A),H=48,ds=S.cfg.dayStart,de=S.cfg.dayEnd,N=de-ds,base=new Date(A.getFullYear(),A.getMonth(),A.getDate(),ds).getTime();
   let g='';for(let h=ds;h<de;h++)g+=`<div class="hr" style="top:${(h-ds)*H}px"><span>${pad(h)}:00</span></div>`;
@@ -525,6 +571,8 @@ function vSet(){const c=S.cfg;
   <label class="opt"><input type="checkbox" id="o-snd" ${c.snd?'checked':''}>Tocar som quando o período mudar</label>
   <div class="opt"><label for="o-vol">Volume</label><input type="range" id="o-vol" min="0" max="100" value="${c.vol}"><span id="volv">${c.vol}%</span></div>
   <label class="opt"><input type="checkbox" id="o-ntf" ${c.ntf?'checked':''}>Mostrar notificação do navegador</label>
+  <p class="sum">Aviso de fim de período: fica na tela até você tocar e, quando o sistema permite, toca som e vibra. O Windows (Assistência de foco / Não perturbe) e o Android (Não perturbe) são controlados pelo sistema: um site não consegue furar o bloqueio. Para o aviso aparecer mesmo assim, adicione o navegador ou o app instalado à lista de prioridade/exceções do modo Não perturbe.</p>
+  ${isMobile?`<label class="opt"><input type="checkbox" id="o-live" ${c.live?'checked':''}>Notificação da sessão em andamento (matéria e tempo)</label>`:''}
   <p class="er">${ntfMsg}</p>
   <label class="opt"><input type="checkbox" id="o-auto" ${c.auto?'checked':''}>Iniciar o próximo período automaticamente</label>
   <h4 class="sub">Sons</h4>${row('focus','Início do foco')}${row('break','Início da pausa')}
@@ -639,6 +687,10 @@ document.addEventListener('change',async e=>{const i=e.target;
   else if(i.id==='o-ds'||i.id==='o-de'){let a=+$('#o-ds').value,b=+$('#o-de').value;
     if(i.id==='o-ds'&&b<=a)b=a+1;if(i.id==='o-de'&&a>=b)a=b-1;
     S.cfg.dayStart=a;S.cfg.dayEnd=b;save();pushCfg();renderView()}
+  else if(i.id==='o-live'){ntfMsg='';
+    if(i.checked){try{const r=await Notification.requestPermission();S.cfg.live=r==='granted';if(!S.cfg.live)ntfMsg='Permissão negada. Libere as notificações nas configurações do navegador.'}catch(x){S.cfg.live=false;ntfMsg='Notificações indisponíveis neste navegador.'}}
+    else S.cfg.live=false;
+    save();liveUpdate(true);renderView()}
   else if(i.id==='o-ntf'){ntfMsg='';
     if(i.checked){try{const r=await Notification.requestPermission();S.cfg.ntf=r==='granted';if(!S.cfg.ntf)ntfMsg='Permissão negada. Libere as notificações nas configurações do navegador.'}catch(x){S.cfg.ntf=false;ntfMsg='Notificações indisponíveis neste navegador.'}}
     else S.cfg.ntf=false;
@@ -649,7 +701,10 @@ document.addEventListener('change',async e=>{const i=e.target;
     renderView()}
 });
 document.addEventListener('visibilitychange',tick);
-setInterval(tick,1000);
+// O relógio roda num Web Worker: abas em segundo plano têm setInterval reduzido
+// (até 1x por minuto), o que atrasaria o aviso de fim de período.
+try{const w=new Worker(URL.createObjectURL(new Blob(['setInterval(function(){postMessage(0)},1000)'],{type:'text/javascript'})));w.onmessage=tick}
+catch(e){setInterval(tick,1000)}
 prepMan();paintSubjSel();paintAll();tick();
 if('serviceWorker' in navigator){
   let waitingWorker=null,reloading=false,checking=false;
